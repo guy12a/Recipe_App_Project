@@ -9,7 +9,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -36,9 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.recipeapp.ui.theme.RecipeAppTheme
@@ -72,14 +69,21 @@ fun HomePage(name: String, modifier: Modifier = Modifier){
 
 @Composable
 fun RecipePage(recipe: Recipe, modifier: Modifier = Modifier){
-    Column(modifier.fillMaxWidth().padding(7.dp).verticalScroll(rememberScrollState())) {
+    Column(modifier.fillMaxWidth().padding(10.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(recipe.name, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-        FlowRow() { }
-        //Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {            for (tag in recipe.tags){
-        //                Card(shape = RoundedCornerShape(15.dp)){
-        //                    Text(tag,Modifier.padding(9.dp,4.dp),fontSize = 18.sp,)
-        //                }
-        //            }}Arrangement.spacedBy(3.dp)
+        FlowRow(modifier= Modifier, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            for (tag in recipe.tags){
+                Card(shape = RoundedCornerShape(15.dp)){
+                    Text(tag,Modifier.padding(9.dp,4.dp),fontSize = 18.sp,)
+                }
+            }
+        }
+        Card( Modifier.fillMaxWidth().aspectRatio(1.25f).padding(0.dp,10.dp),
+            elevation = CardDefaults.cardElevation(5.dp),
+            shape = RoundedCornerShape(10.dp)){
+            Image(recipe.img,recipe.name, contentScale = ContentScale.Crop)
+        }
+
     }
 }
 
@@ -89,7 +93,11 @@ fun MainStructure(){
     RecipeAppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             //HomePage("Guy", Modifier.padding(innerPadding))
-            RecipePage(Recipe("Cookie", "1. Chocolate chips", "bake", "12", mutableListOf("made","chocolate","hey","hey","hey","hey","hey"),mutableListOf("dessert"),5),Modifier.padding(innerPadding) )
+            RecipePage(Recipe("Cookie", "1. Chocolate chips",
+                "bake", "12",
+                mutableListOf("didnt make","chocolate","brian","cookies","eggyolks","hey","hey"),
+                mutableListOf("dessert"),5, painterResource(R.drawable.p1)),
+                Modifier.padding(innerPadding) )
         }
     }
 }
@@ -122,7 +130,7 @@ fun ImageCard (painter: Painter, contentDesc: String, title: String, modifier: M
 
 class Recipe (var name: String, var ingredients: String, var recipeInstruct: String,
                 var servings: String, var tags: MutableList<String>,
-                    var recipeBooks: MutableList<String>, var rating: Int){}
+                    var recipeBooks: MutableList<String>, var rating: Int, var img: Painter){}
 
 @Preview(showBackground = true, showSystemUi = true)
 //@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
