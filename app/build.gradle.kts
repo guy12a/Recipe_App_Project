@@ -55,4 +55,8 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    //implementation("com.github.a914-gowtham:compose-ratingbar:1.3.12")
+//mavenCentral
+// implementation 'io.github.a914-gowtham:compose-ratingbar:1.2.3'
+    implementation("io.github.a914-gowtham:compose-ratingbar:1.2.3")
 }
