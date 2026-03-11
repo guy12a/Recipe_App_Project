@@ -1,20 +1,20 @@
 package com.example.recipeapp
 
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -29,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -42,13 +41,17 @@ import com.example.recipeapp.ui.theme.RecipeAppTheme
 //https://github.com/a914-gowtham/compose-ratingbar
 import com.gowtham.ratingbar.RatingBar
 import androidx.compose.runtime.*
+import coil3.compose.AsyncImage
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        var recipes = getUmamiRecipes(this)
+
         enableEdgeToEdge()
         setContent {
-            MainStructure()
+            MainStructure(recipes)
         }
     }
 }
@@ -57,54 +60,61 @@ class MainActivity : ComponentActivity() {
 //=================== Composables for different views ===================
 //Main scrollable page of app
 @Composable
-fun HomePage(name: String, modifier: Modifier = Modifier){
-    val painter = painterResource(R.drawable.p1)
+fun HomePage(umamiRecipes: List<UmamiRecipe>, modifier: Modifier = Modifier){
+    //val painter = painterResource(R.drawable.placeholder)
     //columns = GridCells.Adaptive(minSize = 128.dp)
     LazyVerticalGrid(GridCells.Adaptive(minSize = 100.dp),
         contentPadding = PaddingValues(10.dp),
-        verticalArrangement = Arrangement.spacedBy(7.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        items(20) {
-            ImageCard(painter,"Cookie","Cookies", Modifier.padding(0.dp))
+        items(count = umamiRecipes.size) { index ->
+            ImageCard(umamiRecipes[index], Modifier.padding(0.dp))
         }
     }
 }
 
 @Composable
-fun RecipePage(recipe: Recipe, modifier: Modifier = Modifier){
+fun RecipePage(umamiRecipe: UmamiRecipe, modifier: Modifier = Modifier){
     var headerStyles = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold)
     var textStyles = TextStyle(fontSize = 16.sp)
     Column(modifier.fillMaxWidth().padding(10.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text(recipe.name, style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold))
-        var rating: Float by remember { mutableStateOf(recipe.rating) }
+        Text(umamiRecipe.name, style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+
+        var rating: Float by remember { mutableStateOf(umamiRecipe.rating) }
         Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.Start) { RatingBar(value = rating, onValueChange = {rating = it}, onRatingChanged = {}) }
+
         FlowRow(modifier= Modifier, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-            for (tag in recipe.tags){
+            for (tag in umamiRecipe.tags){
                 Card(shape = RoundedCornerShape(15.dp)){
                     Text(tag,Modifier.padding(9.dp,4.dp),fontSize = 18.sp,)
                 }
             }
         }
+
         Card( Modifier.fillMaxWidth().aspectRatio(1.25f).padding(0.dp,10.dp),
             elevation = CardDefaults.cardElevation(5.dp),
             shape = RoundedCornerShape(10.dp)){
-            Image(recipe.img,recipe.name, contentScale = ContentScale.Crop)
+            //Image(recipe.img,recipe.name, contentScale = ContentScale.Crop)
         }
+
         Text("Ingredients", style = headerStyles)
-        Text(recipe.ingredients, style = textStyles)
-        Text("", fontSize = 26.sp)
+        Text(umamiRecipe.ingredients, style = textStyles)
+
+        Spacer(Modifier.height(50.dp))
+
         Text("Instructions", style = headerStyles)
-        Text(recipe.recipeInstruct, style = textStyles)
+        Text(umamiRecipe.recipeInstruct, style = textStyles)
     }
 }
 
 //Entrance for the whole composable structure
 @Composable
-fun MainStructure(){
+fun MainStructure(umamiRecipes: List<UmamiRecipe>){
     RecipeAppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            //HomePage("Guy", Modifier.padding(innerPadding))
-            RecipePage(Recipe("Shakshuka Recipe (Easy & Traditional)", "1 and 1/2 cups (180g) gingersnap cookie crumbs*\n" +
+            //Text("hey", Modifier.padding(innerPadding))
+            HomePage(umamiRecipes, Modifier.padding(innerPadding))
+            /*RecipePage(Recipe("Shakshuka Recipe (Easy & Traditional)", "1 and 1/2 cups (180g) gingersnap cookie crumbs*\n" +
                     "\n" +
                     "1/4 teaspoon each: ground ginger and ground cinnamon\n" +
                     "1/4 cup (4 Tbsp; 56g) unsalted butter, melted\n" +
@@ -150,8 +160,13 @@ fun MainStructure(){
                         "\n" +
                         "Cover and store leftover cheesecake in the refrigerator for up to 5 days.", "12",
                 mutableListOf("didnt make","chocolate","brian","cookies","eggyolks","hey","hey"),
-                mutableListOf("dessert"),5f, painterResource(R.drawable)),
-                Modifier.padding(innerPadding) )
+                mutableListOf("dessert"),5f,rememberAsyncImagePainter("file:///android_asset/pictures/American Cherry Tart.jpg")),
+                Modifier.padding(innerPadding) )*/
+            /*AsyncImage(
+                model = "file:///android_asset/pictures/apple_pie.jpg",
+                contentDescription = null,
+                placeholder = painterResource(R.drawable.placeholder)
+            )*/
         }
     }
 }
@@ -159,7 +174,7 @@ fun MainStructure(){
 //============================= Extras =============================
 //Image of recipe and name
 @Composable
-fun ImageCard (painter: Painter, contentDesc: String, title: String, modifier: Modifier = Modifier){
+fun ImageCard (umamiRecipe: UmamiRecipe, modifier: Modifier = Modifier){
     Card(
         modifier,
     ) {
@@ -168,27 +183,31 @@ fun ImageCard (painter: Painter, contentDesc: String, title: String, modifier: M
         //!!!!!!!Modifier order matters.
         Column(Modifier.background(Color.White),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceEvenly) {
+            verticalArrangement = Arrangement.Center) {
 
             //aspect ratio - 1< means more squat, 1>means more thin
             Card( Modifier.aspectRatio(1.2f),
                 elevation = CardDefaults.cardElevation(5.dp),
-                shape = RoundedCornerShape(15.dp)){
-                Image(painter,contentDesc, contentScale = ContentScale.Crop)
+                shape = RoundedCornerShape(15.dp)) {
+                AsyncImage(
+                    model = "file:///android_asset/pictures/"+ umamiRecipe.name + ".jpg",
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.placeholder)
+                )
+                //Image(painter,contentDesc, contentScale = ContentScale.Crop)
             }
-            Text(title,style = TextStyle(color = Color.Black, fontSize = 16.sp), maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(umamiRecipe.name,style = TextStyle(color = Color.Black, fontSize = 16.sp), maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
 
     }
 }
 
-class Recipe (var name: String, var ingredients: String, var recipeInstruct: String,
-                var servings: String, var tags: MutableList<String>,
-                    var recipeBooks: MutableList<String>, var rating: Float, var img: Painter){}
-
 @Preview(showBackground = true, showSystemUi = true)
 //@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
 @Composable
 fun AppPreview() {
-    MainStructure()
+    //var lst: List<Recipe>
+    //MainStructure(lst)
 }
+

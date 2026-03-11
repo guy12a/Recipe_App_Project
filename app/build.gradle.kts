@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    kotlin("plugin.serialization") // <-- add this
 }
 
 android {
@@ -59,4 +60,8 @@ dependencies {
 //mavenCentral
 // implementation 'io.github.a914-gowtham:compose-ratingbar:1.2.3'
     implementation("io.github.a914-gowtham:compose-ratingbar:1.2.3")
+    implementation("io.coil-kt.coil3:coil-compose:3.4.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
+    implementation("com.google.code.gson:gson:2.13.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
 }
