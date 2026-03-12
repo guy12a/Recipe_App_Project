@@ -7,6 +7,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 
+/*
+This file is the Umami recipes, exported as json, from the site.
+It includes the Class itself,
+and functions to process umami json recipes into standard AppRecipe class
+ */
+
 @Serializable
 data class UmamiRecipe(
     @SerialName("@context")
@@ -38,13 +44,6 @@ data class UmamiRecipe(
 
     var recipeIngredient: List<String> = emptyList(),
     var recipeInstructions: List<Instruction> = emptyList(),
-    //===========================
-    //actual use, might change
-    var rating: Float = 0f,
-    var tags: List<String> = emptyList(),
-    var ingredients: String = "",
-    var recipeInstruct: String = "",
-    @Transient var img: Painter? = null
 )
 
 @Serializable
@@ -71,35 +70,107 @@ data class Instruction(
     val url: String? = null
 )
 
+//===================================================================
+//Loading and parsing Umami jsons
+fun getUmamiAsApp (context: Context): List<AppRecipe>{
+    val recipes = mutableListOf<AppRecipe>()
 
-fun getTextFromJson(context: Context, fileName: String): String {
-    return context.assets.open(fileName)
-        .bufferedReader()
-        .use { it.readText() }
-}
+    val files = context.assets.list("umami_recipes") ?: return recipes
 
-fun parseUmamiRecipe (context: Context, recipeName: String): UmamiRecipe{
-    val jsonString = getTextFromJson(context, recipeName)
+    val json = Json { ignoreUnknownKeys = true }
 
-    val json = Json {
-        ignoreUnknownKeys = true
+    for (file in files) {
+        val jsonString = context.assets.
+            open("umami_recipes/$file")
+            .bufferedReader()
+            .use { it.readText() }
+
+        val umamiRecipe = json.decodeFromString<UmamiRecipe>(jsonString)
+        recipes.add(umamiToApp(umamiRecipe))
     }
 
-    val umamiRecipe = json.decodeFromString<UmamiRecipe>(jsonString)
-    return umamiRecipe
+    return recipes
 }
 
+//getting unprocessed umami recipes
 fun getUmamiRecipes (context: Context): List<UmamiRecipe>{
-    val umamiRecipes = mutableListOf<UmamiRecipe>()
+    val recipes = mutableListOf<UmamiRecipe>()
 
-    val files = context.assets.list("my_recipes_folder") ?: return umamiRecipes
+    val files = context.assets.list("umami_recipes") ?: return recipes
 
-    for (fileName in files) {
-        val recipe = parseUmamiRecipe(context, "my_recipes_folder/$fileName")
-        umamiRecipes.add(recipe)
+    val json = Json { ignoreUnknownKeys = true }
+
+    for (file in files) {
+        val jsonString = context.assets.
+        open("umami_recipes/$file")
+            .bufferedReader()
+            .use { it.readText() }
+
+        val umamiRecipe = json.decodeFromString<UmamiRecipe>(jsonString)
+        recipes.add(umamiRecipe)
     }
 
-    return umamiRecipes
+    return recipes
 }
+
+//===================================================================
+//Transforming Umami recipes to AppRecipe
+fun umamiToApp (umamiRecipe: UmamiRecipe): AppRecipe{
+    val tags = formatTags(umamiRecipe.description)
+    val recipe = AppRecipe(
+        umamiRecipe.name,
+        umamiRecipe.image,
+        umamiRecipe.datePublished,
+        umamiRecipe.datePublished,
+        tags,
+        umamiRecipe.prepTime,
+        umamiRecipe.cookTime,
+        umamiRecipe.totalTime,
+        umamiRecipe.recipeYield,
+        formatRecipeBooks(tags), //change this vvv
+        umamiRecipe.recipeIngredient,
+        formatInstructions(umamiRecipe.recipeInstructions),
+        0f
+        )
+    return recipe
+}
+
+private fun formatTags(description: String?) : List<String>{
+    if (description == null) {
+        return emptyList()
+    }
+    val lower = description.lowercase()
+    val tags = lower.split(",")
+    return tags
+}
+
+private fun formatRecipeBooks (tags: List<String>): List<String>{
+    val books = mutableListOf<String>()
+    for(tag in tags){
+        if((tag == "dessert" || tag == "cookies" || tag == "tart") && !books.contains("Sweets & Desserts"))
+            books.add("Sweets & Desserts")
+        if((tag == "pizza" || tag == "bread") && !books.contains("Breads & Baked"))
+            books.add("Breads & Baked")
+        if((tag == "basic ingredients") && !books.contains("Ingredients & Basics"))
+            books.add("Ingredients & Basics")
+        if((tag == "pasta" || tag == "soup") && !books.contains("Cooking & Soups"))
+            books.add("Cooking & Soups")
+        if((tag == "meat" || tag == "chicken" || tag == "beef") && !books.contains("Meat & Lunch"))
+            books.add("Meat & Lunch")
+        if((tag == "appetizer" || tag == "salad") && !books.contains("Appetizers & Sides"))
+            books.add("Appetizers & Sides")
+    }
+    return books
+}
+
+private fun formatInstructions(instructions: List<Instruction>): List<String>{
+    var lst = mutableListOf<String>()
+    for(instr in instructions){
+        lst.add(instr.text)
+    }
+    return lst
+}
+
+
 
 
