@@ -18,6 +18,10 @@ class MainActivity : ComponentActivity() {
 
         //This sections loads the umami recipes from scratch
         //and saves them in app recipe format
+        // figure out how to only load umami ones upon installation, or merge
+
+        val searchUtils = SearchUtils(this)
+        searchUtils.loadRecipes()
 
         /*
         var recipes = getUmamiAsApp(this)
@@ -26,24 +30,22 @@ class MainActivity : ComponentActivity() {
         }
         */
 
-        //loads already formatted appRecipe jsons, ID based
-        var recipes = loadSavedRecipes(this)
-
-
+        val sweets = searchUtils.getCookBook("Sweets & Desserts")
 
         enableEdgeToEdge()
         setContent {
-            MainStructure(recipes)
+            if(sweets != null)
+                MainStructure(searchUtils,"Recipe Books")
         }
     }
 }
 
 //Entrance for the whole composable structure
 @Composable
-fun MainStructure(recipes: List<AppRecipe>){
+fun MainStructure(searchUtils :SearchUtils, name: String){
     RecipeAppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            CookbookPage("Home",recipes, Modifier.padding(innerPadding))
+            CookbookPage(searchUtils, name, Modifier.padding(innerPadding))
             //RecipePage(recipes[0], Modifier.padding(innerPadding))
             /*AsyncImage(
                 model = "file:///android_asset/pictures/apple_pie.jpg",
@@ -59,22 +61,6 @@ fun MainStructure(recipes: List<AppRecipe>){
 //@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
 @Composable
 fun AppPreview() {
-    MainStructure(mutableListOf(exampleRec()))
-}
-
-fun exampleRec(): AppRecipe{
-    val lst = mutableListOf<String>()
-    lst.add("https://www.umami.recipes/api/image/recipes/02WXpK1Tqiz7nDxmwwjY/images/5p3FPEt7vJ8mEK3FpSBQZc?w=2048&q=75")
-    val tags = mutableListOf<String>()
-    tags.add("chocolate")
-    tags.add("chocolate")
-    tags.add("chocolate")
-    tags.add("chocolate")
-
-    return AppRecipe("30 min Choclate Chip Cookies",
-        lst,
-        "2023-10-06T14:21:57.559Z",
-        "2023-10-06T14:21:57.559Z",tags,
-        recipeBooks = mutableListOf<String>("Sweets & Desserts"))
+    //MainStructure(mutableListOf(exampleRec(),exampleRec(),exampleRec(),exampleRec()),"Home")
 }
 

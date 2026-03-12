@@ -4,12 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -23,7 +25,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -31,34 +35,44 @@ import coil3.compose.AsyncImage
 /* Add options to:
     Add new recipe
     Edit cookbook name
-    Make title part of the scrollable vertical column
 * */
 
 //Cookbook page just gets a list of recipes to present, and its name
 @Composable
-fun CookbookPage(cookBookName: String, recipes: List<AppRecipe>, modifier: Modifier = Modifier){
+fun CookbookPage(searchUtils : SearchUtils, name: String, modifier: Modifier = Modifier){
     //val painter = painterResource(R.drawable.placeholder)
     //columns = GridCells.Adaptive(minSize = 128.dp)
-
-    Spacer(Modifier.height(50.dp))
-    Text(cookBookName, style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold))
-    Spacer(Modifier.height(50.dp))
+    var lst = mutableListOf<AppRecipe>()
+    if(name == "Recipe Books")
+        lst = searchUtils.getCookBooksList()
+    else{
+        val lst2 = searchUtils.getCookBook(name)
+        if(lst2 != null)
+            lst = lst2
+    }
 
     LazyVerticalGrid(
         GridCells.Adaptive(minSize = 100.dp),
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        items(count = recipes.size) { index ->
-            ImageCard(recipes[index], Modifier.padding(0.dp))
+        verticalArrangement = Arrangement.spacedBy(15.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp))
+    {
+        item (span = { GridItemSpan(maxCurrentLineSpan) }){
+            Text(name, style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+        }
+        items(count = lst.size) { index ->
+            if(name=="Recipe Books")
+                ImageCard(lst[index],searchUtils.cookBooks[index], Modifier.padding(0.dp))
+            else
+                ImageCard(lst[index],lst[index].name, Modifier.padding(0.dp))
         }
     }
 }
 
 //Image + Recipe Name for the cookbook page
 @Composable
-fun ImageCard (recipe: AppRecipe, modifier: Modifier = Modifier){
+fun ImageCard (recipe: AppRecipe,cardTxt : String, modifier: Modifier = Modifier){
     Card(
         modifier,
     ) {
@@ -67,7 +81,7 @@ fun ImageCard (recipe: AppRecipe, modifier: Modifier = Modifier){
         //!!!!!!!Modifier order matters.
         Column(Modifier.background(Color.White),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
+            verticalArrangement = Arrangement.spacedBy(7.dp)) {
 
             //aspect ratio - 1< means more squat, 1>means more thin
             Card( Modifier.aspectRatio(1.2f),
@@ -81,7 +95,8 @@ fun ImageCard (recipe: AppRecipe, modifier: Modifier = Modifier){
                 )
                 //Image(painter,contentDesc, contentScale = ContentScale.Crop)
             }
-            Text(recipe.name,style = TextStyle(color = Color.Black, fontSize = 16.sp), maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Text(cardTxt,Modifier.padding(2.dp),style = TextStyle(color = Color.Black, fontSize = 15.sp, textAlign = TextAlign.Center), maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
     }
 }
+
