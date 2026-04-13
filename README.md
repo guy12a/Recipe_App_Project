@@ -9,11 +9,10 @@ This is a personal project, in which I develop an Android app, to store, manage,
 - Saving and loading recipes to device from storage using JSONs
 - Basic filtering
 - Importing recipes from Umami.com
+- Navigation between Home, Cookbooks, and Recipe page
 
 
 ## Roadmap
-
-- Navigation between recipe list and individual recipe page
 
 - App design - consistent style, top and bottom bars
 
