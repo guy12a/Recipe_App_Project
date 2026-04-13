@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,34 +36,22 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.example.recipeapp.ui.theme.RecipeAppTheme
-import kotlin.collections.mutableListOf
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 /* Add options to:
     Add new recipe
     Edit cookbook name
 * */
 
-//Cookbook page gets a SearchUtils and the name of the cookbook
 @Composable
-fun CookbookPage(searchUtils : SearchUtils,
-                 name: String?,
-                 modifier: Modifier = Modifier,
-                 navController: NavController){
-
+fun CookbookPageLayout(title : String,
+                       map:HashMap<String,AppRecipe>,
+                       name:String?,
+                       modifier: Modifier = Modifier,
+                       navController: NavController){
     //val painter = painterResource(R.drawable.placeholder)
     //columns = GridCells.Adaptive(minSize = 128.dp)
-    var map = HashMap<String,AppRecipe>()
-    var title = ""
-    if(name == null){
-        title = "Home"
-        map = searchUtils.getCookBooksList()
-    }
-    else{
-        title = name
-        map = searchUtils.getBookRecipesAsMap(title)
-    }
-
-
     LazyVerticalGrid(
         GridCells.Adaptive(minSize = 100.dp),
         modifier = modifier.fillMaxWidth(),
@@ -71,7 +60,9 @@ fun CookbookPage(searchUtils : SearchUtils,
         horizontalArrangement = Arrangement.spacedBy(10.dp))
     {
         item (span = { GridItemSpan(maxCurrentLineSpan) }){
-            Text(title, style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+            var newTitle = title
+            if(title!=SearchUtils.homeName) newTitle+= " - " + map.size + " recipes"
+            Text(newTitle, style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold))
         }
         items(map.entries.toList()) { entry ->
             val (cardName, recipe) = entry
@@ -92,15 +83,31 @@ fun CookbookPage(searchUtils : SearchUtils,
         }
     }
 
-    /*
-    if(name == "Recipe Books")
-        lst = searchUtils.getCookBooksList()
-    else{
-        val lst2 = searchUtils.getBookRecipes(name)
-        if(lst2 != null)
-            lst = lst2
-    }*/
 }
+
+//Cookbook page gets a SearchUtils and the name of the cookbook
+@Composable
+fun CookbookPage(searchUtils : SearchUtils,
+                 name: String?,
+                 modifier: Modifier = Modifier,
+                 navController: NavController){
+
+
+    var map = HashMap<String,AppRecipe>()
+    var title = ""
+    if(name == null){
+        title = SearchUtils.homeName
+        map = searchUtils.getCookBooksList()
+    }
+    else{
+        title = name
+        map = searchUtils.getBookRecipesAsMap(title)
+    }
+    CookbookPageLayout(title,map,name,modifier,navController)
+
+}
+
+
 
 //Image + Recipe Name for the cookbook page
 //Or image + cookbook name for the all books page
@@ -140,8 +147,11 @@ fun ImageCard (recipeName: String,
 fun AppPreview() {
     RecipeAppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            CookbookPage(SearchUtils(), "Home", Modifier.padding(innerPadding), navController = rememberNavController())
+            var map = HashMap<String,AppRecipe>()
+            map.put("Sweets", SearchUtils.exampleRec())
+            CookbookPageLayout(SearchUtils.homeName, map,null, Modifier.padding(innerPadding), navController = rememberNavController())
 
+            //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController())
         }
     }
 }
