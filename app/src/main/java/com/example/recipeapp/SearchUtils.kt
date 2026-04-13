@@ -6,6 +6,15 @@ class SearchUtils (val context: Context) {
     var recipes : MutableList<AppRecipe> = mutableListOf<AppRecipe>()
     var cookBooks: MutableList<String> = mutableListOf()
 
+    fun getRecipe(recipeId: String): AppRecipe{
+        for(recipe in recipes){
+            if(recipe.id == recipeId){
+                return recipe;
+            }
+        }
+        return exampleRec()
+    }
+
     //loads already formatted appRecipe jsons, ID based
     fun loadRecipes(){
         val recps = loadSavedRecipes(context)
@@ -32,12 +41,17 @@ class SearchUtils (val context: Context) {
 
     fun getCookBooksList() : MutableList<AppRecipe>{
         val lst = mutableListOf<AppRecipe>()
+        var leng = 0
         for(book in cookBooks){
+            var temp = leng
             for(recipe in recipes){
-                if(recipe.recipeBooks.contains(book)){
+                if(recipe.recipeBooks.contains(book)) {
                     lst.add(recipe)
+                    leng = leng+1
                     break
                 }
+            }
+            if(temp==leng){
                 lst.add(exampleRec())
             }
         }

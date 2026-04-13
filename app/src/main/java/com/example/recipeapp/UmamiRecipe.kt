@@ -71,7 +71,7 @@ data class Instruction(
 )
 
 //===================================================================
-//Loading and parsing Umami jsons
+//Loading Umami Jsons, transforming them into my Recipe Class
 fun getUmamiAsApp (context: Context): List<AppRecipe>{
     val recipes = mutableListOf<AppRecipe>()
 
@@ -92,7 +92,7 @@ fun getUmamiAsApp (context: Context): List<AppRecipe>{
     return recipes
 }
 
-//getting unprocessed umami recipes
+//getting unprocessed umami recipes - NOT as app recipe
 fun getUmamiRecipes (context: Context): List<UmamiRecipe>{
     val recipes = mutableListOf<UmamiRecipe>()
 
@@ -140,7 +140,7 @@ private fun formatTags(description: String?) : List<String>{
         return emptyList()
     }
     val lower = description.lowercase()
-    val tags = lower.split(",")
+    val tags = lower.split(", ")
     return tags
 }
 

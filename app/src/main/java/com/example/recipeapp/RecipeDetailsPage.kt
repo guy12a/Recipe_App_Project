@@ -27,6 +27,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.gowtham.ratingbar.RatingBar
 //https://github.com/a914-gowtham/compose-ratingbar
@@ -41,9 +42,15 @@ import com.gowtham.ratingbar.RatingBar
 * */
 
 @Composable
-fun RecipePage(recipe: AppRecipe, modifier: Modifier = Modifier){
+fun RecipePage(searchUtils : SearchUtils,
+               recipeId: String,
+               modifier: Modifier = Modifier,
+               navController: NavController,
+
+){
     var headerStyles = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold)
     var textStyles = TextStyle(fontSize = 16.sp)
+    var recipe = searchUtils.getRecipe(recipeId)
 
     Column(
         modifier.fillMaxWidth().

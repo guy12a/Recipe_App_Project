@@ -1,6 +1,7 @@
 package com.example.recipeapp
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 
 /* Add options to:
@@ -39,10 +41,15 @@ import coil3.compose.AsyncImage
 
 //Cookbook page just gets a list of recipes to present, and its name
 @Composable
-fun CookbookPage(searchUtils : SearchUtils, name: String, modifier: Modifier = Modifier){
+fun CookbookPage(searchUtils : SearchUtils,
+                 name: String,
+                 modifier: Modifier = Modifier,
+                 navController: NavController){
+
     //val painter = painterResource(R.drawable.placeholder)
     //columns = GridCells.Adaptive(minSize = 128.dp)
     var lst = mutableListOf<AppRecipe>()
+
     if(name == "Recipe Books")
         lst = searchUtils.getCookBooksList()
     else{
@@ -63,32 +70,50 @@ fun CookbookPage(searchUtils : SearchUtils, name: String, modifier: Modifier = M
         }
         items(count = lst.size) { index ->
             if(name=="Recipe Books")
-                ImageCard(lst[index],searchUtils.cookBooks[index], Modifier.padding(0.dp))
+                ImageCard(lst[index].name,
+                    searchUtils.cookBooks[index],
+                    Modifier.padding(0.dp),
+                    {navController.navigate(
+                        CookbookScreen(searchUtils.cookBooks[index])
+                    )})
             else
-                ImageCard(lst[index],lst[index].name, Modifier.padding(0.dp))
+                ImageCard(lst[index].name,
+                    lst[index].name,
+                    Modifier.padding(0.dp),
+                    {navController.navigate(
+                        RecipeScreen(lst[index].id)
+                    )})
         }
     }
 }
 
 //Image + Recipe Name for the cookbook page
 @Composable
-fun ImageCard (recipe: AppRecipe,cardTxt : String, modifier: Modifier = Modifier){
+fun ImageCard (recipeName: String,
+               cardTxt : String,
+               modifier: Modifier = Modifier,
+               onClick: () -> Unit){
     Card(
         modifier,
     ) {
         //each element is naturally taking enough space only to fit itself. If specifying "fillmaxsize"
         //it will fit more than it needs, based on other elements
         //!!!!!!!Modifier order matters.
-        Column(Modifier.background(Color.White),
+        Column(Modifier.background(Color.White).
+            clickable{
+                onClick()
+            },
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            verticalArrangement = Arrangement.spacedBy(7.dp),
+
+            ) {
 
             //aspect ratio - 1< means more squat, 1>means more thin
             Card( Modifier.aspectRatio(1.2f),
                 elevation = CardDefaults.cardElevation(5.dp),
                 shape = RoundedCornerShape(15.dp)) {
                 AsyncImage(
-                    model = "file:///android_asset/pictures/"+ recipe.name + ".jpg",
+                    model = "file:///android_asset/pictures/$recipeName.jpg",
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     placeholder = painterResource(R.drawable.placeholder)

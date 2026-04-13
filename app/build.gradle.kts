@@ -1,7 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    kotlin("plugin.serialization") // <-- add this
+    //kotlin("plugin.serialization") // <-- add this
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -63,5 +64,8 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.4.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
     implementation("com.google.code.gson:gson:2.13.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+    //implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+
+    implementation(libs.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
 }
