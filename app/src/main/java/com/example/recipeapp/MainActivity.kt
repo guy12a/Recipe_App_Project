@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -33,8 +32,8 @@ class MainActivity : ComponentActivity() {
         }
         */
 
-        val searchUtils = SearchUtils(this)
-        searchUtils.loadRecipes()
+        val searchUtils = SearchUtils()
+        searchUtils.loadRecipes(this)
 
         enableEdgeToEdge()
         setContent {
@@ -51,16 +50,16 @@ fun MainStructure(searchUtils :SearchUtils){
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = CookbookScreen("Recipe Books"),
+                startDestination = CookbookPageNav(),
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable<CookbookScreen>{ backStackEntry -> val args = backStackEntry.toRoute<CookbookScreen>()
+                composable<CookbookPageNav>{ backStackEntry -> val args = backStackEntry.toRoute<CookbookPageNav>()
                     CookbookPage(searchUtils,
                         name = args.cookbookName,
                         Modifier.padding(innerPadding),
                         navController = navController)
                 }
-                composable<RecipeScreen> { backStackEntry -> val args = backStackEntry.toRoute<RecipeScreen>()
+                composable<RecipePageNav> { backStackEntry -> val args = backStackEntry.toRoute<RecipePageNav>()
                     RecipePage(
                         searchUtils,
                         recipeId = args.recipeId,
@@ -73,21 +72,13 @@ fun MainStructure(searchUtils :SearchUtils){
     }
 }
 
-
-@Preview(showBackground = true, showSystemUi = true)
-//@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
-@Composable
-fun AppPreview() {
-    //MainStructure(mutableListOf(exampleRec(),exampleRec(),exampleRec(),exampleRec()),"Home")
-}
-
 @Serializable
-data class CookbookScreen(
-    val cookbookName: String
+data class CookbookPageNav(
+    val cookbookName: String? = null
 )
 
 @Serializable
-data class RecipeScreen(
+data class RecipePageNav(
     val recipeId: String
 )
 
@@ -96,6 +87,16 @@ data class RecipeScreen(
     model = "file:///android_asset/pictures/apple_pie.jpg",
     contentDescription = null,
     placeholder = painterResource(R.drawable.placeholder)
-)*/
+)
+        //each element is naturally taking enough space only to fit itself. If specifying "fillmaxsize"
+        //it will fit more than it needs, based on other elements
+        //!!!!!!!Modifier order matters.
+
+                        //Image(painter,contentDesc, contentScale = ContentScale.Crop)
+
+
+*/
+
+
 
 
