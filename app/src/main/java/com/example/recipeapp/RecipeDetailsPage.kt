@@ -1,5 +1,6 @@
 package com.example.recipeapp
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,6 +37,10 @@ import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.example.recipeapp.ui.theme.RecipeAppTheme
 import com.gowtham.ratingbar.RatingBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.Alignment
+
 //https://github.com/a914-gowtham/compose-ratingbar
 
 
@@ -49,8 +55,9 @@ import com.gowtham.ratingbar.RatingBar
 @Composable
 fun RecipePageLayout(recipe : AppRecipe,
                      modifier: Modifier = Modifier,
-                     navController: NavController, ){
-
+                     navController: NavController,
+                     from:String)
+{
     var headerStyles = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold)
     var textStyles = TextStyle(fontSize = 16.sp)
 
@@ -60,6 +67,14 @@ fun RecipePageLayout(recipe : AppRecipe,
         verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(5.dp))
     {
+        //return button - add text?
+        //Add more icons: right click 'res' -> 'new' -> 'Vector Asset'
+        Row(modifier = Modifier.clickable{navController.popBackStack()}, verticalAlignment = Alignment.CenterVertically) {
+            Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "")
+            Text(from, style = textStyles)
+        }
+        //IconButton(, modifier = Modifier.size(30.dp))
+        
         //Recipe Title
         Text(recipe.name, style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold))
 
@@ -106,13 +121,26 @@ fun RecipePage(searchUtils : SearchUtils,
                recipeId: String,
                modifier: Modifier = Modifier,
                navController: NavController,
-
+               from: String
 ){
     var recipe = searchUtils.getRecipe(recipeId)
-    RecipePageLayout(recipe,modifier,navController)
+    RecipePageLayout(recipe,modifier,navController,from)
 }
 
+@Preview(showBackground = true, showSystemUi = true)
+//@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
+@Composable
+fun AppPreview() {
+    RecipeAppTheme {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            var map = HashMap<String,AppRecipe>()
+            map.put("Sweets", SearchUtils.exampleRec())
+            //CookbookPageLayout(SearchUtils.homeName, map,null, Modifier.padding(innerPadding), navController = rememberNavController())
 
+            RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
+        }
+    }
+}
 
 
 

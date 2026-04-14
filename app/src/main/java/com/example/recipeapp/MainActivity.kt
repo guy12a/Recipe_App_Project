@@ -65,6 +65,7 @@ fun MainStructure(searchUtils :SearchUtils){
                         recipeId = args.recipeId,
                         Modifier.padding(innerPadding),
                         navController = navController,
+                        from = args.from
                     )
                 }
             }
@@ -79,7 +80,8 @@ data class CookbookPageNav(
 
 @Serializable
 data class RecipePageNav(
-    val recipeId: String
+    val recipeId: String,
+    val from: String
 )
 
 //RecipePage(recipes[0], Modifier.padding(innerPadding))

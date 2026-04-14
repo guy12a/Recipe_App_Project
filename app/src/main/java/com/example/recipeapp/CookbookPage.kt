@@ -78,7 +78,7 @@ fun CookbookPageLayout(title : String,
                     cardName,
                     Modifier.padding(0.dp),
                     {navController.navigate(
-                        RecipePageNav(recipe.id)
+                        RecipePageNav(recipe.id,title)
                     )})
         }
     }
@@ -141,18 +141,5 @@ fun ImageCard (recipeName: String,
 }
 
 
-@Preview(showBackground = true, showSystemUi = true)
-//@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
-@Composable
-fun AppPreview() {
-    RecipeAppTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            var map = HashMap<String,AppRecipe>()
-            map.put("Sweets", SearchUtils.exampleRec())
-            CookbookPageLayout(SearchUtils.homeName, map,null, Modifier.padding(innerPadding), navController = rememberNavController())
 
-            //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController())
-        }
-    }
-}
 
