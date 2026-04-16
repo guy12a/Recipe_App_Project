@@ -1,6 +1,11 @@
 package com.example.recipeapp
 
 import android.content.Context
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 
 class SearchUtils {
     //map recipeId -> Recipe
@@ -110,6 +115,16 @@ class SearchUtils {
                 "2023-10-06T14:21:57.559Z",tags,
                 recipeBooks = mutableListOf("Sweets & Desserts"))
         }
+    }
+}
+
+class StyleUtils{
+    companion object {
+        val bigTitle = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold)
+        val smallTitle = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold)
+        val regularText = TextStyle(fontSize = 16.sp)
+
+        val cardText = TextStyle(color = Color.Black, fontSize = 15.sp, textAlign = TextAlign.Center)
     }
 }
 

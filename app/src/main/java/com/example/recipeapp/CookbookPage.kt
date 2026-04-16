@@ -25,13 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
@@ -62,7 +58,7 @@ fun CookbookPageLayout(title : String,
         item (span = { GridItemSpan(maxCurrentLineSpan) }){
             var newTitle = title
             if(title!=SearchUtils.homeName) newTitle+= " - " + map.size + " recipes"
-            Text(newTitle, style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+            Text(newTitle, style = StyleUtils.bigTitle)
         }
         items(map.entries.toList()) { entry ->
             val (cardName, recipe) = entry
@@ -135,10 +131,12 @@ fun ImageCard (recipeName: String,
                     placeholder = painterResource(R.drawable.placeholder)
                 )
             }
-            Text(cardTxt,Modifier.padding(2.dp),style = TextStyle(color = Color.Black, fontSize = 15.sp, textAlign = TextAlign.Center), maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Text(cardTxt,Modifier.padding(2.dp),style = StyleUtils.cardText, maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
     }
 }
+
+
 
 
 

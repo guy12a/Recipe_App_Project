@@ -58,9 +58,6 @@ fun RecipePageLayout(recipe : AppRecipe,
                      navController: NavController,
                      from:String)
 {
-    var headerStyles = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold)
-    var textStyles = TextStyle(fontSize = 16.sp)
-
     Column(
         modifier.fillMaxWidth().
         padding(10.dp).
@@ -71,12 +68,12 @@ fun RecipePageLayout(recipe : AppRecipe,
         //Add more icons: right click 'res' -> 'new' -> 'Vector Asset'
         Row(modifier = Modifier.clickable{navController.popBackStack()}, verticalAlignment = Alignment.CenterVertically) {
             Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "")
-            Text(from, style = textStyles)
+            Text(from, style = StyleUtils.regularText)
         }
         //IconButton(, modifier = Modifier.size(30.dp))
         
         //Recipe Title
-        Text(recipe.name, style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+        Text(recipe.name, style = StyleUtils.bigTitle)
 
         //Star Rating
         var rating: Float by remember { mutableStateOf(recipe.rating) }
@@ -105,14 +102,14 @@ fun RecipePageLayout(recipe : AppRecipe,
         }
 
         //Ingredients
-        Text("Ingredients", style = headerStyles)
-        Text(recipe.getIngredAsText(), style = textStyles)
+        Text("Ingredients", style = StyleUtils.smallTitle)
+        Text(recipe.getIngredAsText(), style = StyleUtils.regularText)
 
         Spacer(Modifier.height(25.dp))
 
         //Insturctions
-        Text("Instructions", style = headerStyles)
-        Text(recipe.getInstructAsText(), style = textStyles)
+        Text("Instructions", style = StyleUtils.smallTitle)
+        Text(recipe.getInstructAsText(), style = StyleUtils.regularText)
     }
 }
 
@@ -127,20 +124,7 @@ fun RecipePage(searchUtils : SearchUtils,
     RecipePageLayout(recipe,modifier,navController,from)
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-//@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
-@Composable
-fun AppPreview() {
-    RecipeAppTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            var map = HashMap<String,AppRecipe>()
-            map.put("Sweets", SearchUtils.exampleRec())
-            //CookbookPageLayout(SearchUtils.homeName, map,null, Modifier.padding(innerPadding), navController = rememberNavController())
 
-            RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
-        }
-    }
-}
 
 
 
