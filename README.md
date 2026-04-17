@@ -7,14 +7,14 @@ This is a personal project, in which I develop an Android app, to store, manage,
 ## Features So Far
 
 - Saving and loading recipes to device from storage using JSONs
-- Basic filtering
 - Importing recipes from Umami.com
 - Navigation between Home, Cookbooks, and Recipe page
+- Centralized class to search and provide lists of recipes, using HashMaps
 
 
 ## Roadmap
 
-- App design - consistent style, top and bottom bars
+- App design - consistent style, top bar
 
 - Format ingredients and instructions
 
