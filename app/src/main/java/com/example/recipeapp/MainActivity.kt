@@ -75,10 +75,11 @@ fun MainStructure(searchUtils :SearchUtils){
             topBar = {
                 //current backStack - current screen. There is also previous!
                 val backStackEntry by navController.currentBackStackEntryAsState()
+
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        titleContentColor = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
                     ),
                     title = {},
                     navigationIcon = {
@@ -110,7 +111,6 @@ fun MainStructure(searchUtils :SearchUtils){
                         navController = navController
                     )
                 }
-
                 composable<CookbookPageNav>{ backStackEntry -> val args = backStackEntry.toRoute<CookbookPageNav>()
                     CookbookPage(searchUtils,
                         name = args.cookbookName,
@@ -146,7 +146,9 @@ fun BackText(entry: NavBackStackEntry?) {
 fun TopAppBarActions(entry: NavBackStackEntry?) {
     val destination = entry?.destination
     if(destination?.hasRoute<MainPageNav>() == true){
-
+        IconButton(onClick = { /* do something */ }) {
+            Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
+        }
     }
     else if(destination?.hasRoute<CookbookPageNav>() == true){
         IconButton(onClick = { /* do something */ }) {
@@ -180,8 +182,6 @@ data class RecipePageNav(
     val from: String
 )
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, showSystemUi = true)
 //@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
@@ -195,10 +195,10 @@ fun AppPreview() {
             topBar = {
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        titleContentColor = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
                     ),
-                    title = {},
+                    title = {Text("Hey")},
                     navigationIcon = {
                         Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = { /* do something */ }) {
@@ -223,8 +223,6 @@ fun AppPreview() {
         }
     }
 }
-
-
 //RecipePage(recipes[0], Modifier.padding(innerPadding))
 /*AsyncImage(
     model = "file:///android_asset/pictures/apple_pie.jpg",
