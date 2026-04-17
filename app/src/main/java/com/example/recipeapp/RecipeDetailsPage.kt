@@ -66,10 +66,13 @@ fun RecipePageLayout(recipe : AppRecipe,
     {
         //return button - add text?
         //Add more icons: right click 'res' -> 'new' -> 'Vector Asset'
+
+        /*
         Row(modifier = Modifier.clickable{navController.popBackStack()}, verticalAlignment = Alignment.CenterVertically) {
             Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "")
             Text(from, style = StyleUtils.regularText)
         }
+        */
         //IconButton(, modifier = Modifier.size(30.dp))
         
         //Recipe Title

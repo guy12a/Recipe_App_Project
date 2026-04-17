@@ -1,5 +1,6 @@
 package com.example.recipeapp
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,14 +19,17 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.recipeapp.ui.theme.RecipeAppTheme
@@ -58,6 +62,7 @@ class MainActivity : ComponentActivity() {
 }
 
 //Entrance for the whole composable structure
+@SuppressLint("RestrictedApi")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainStructure(searchUtils :SearchUtils){
@@ -68,6 +73,8 @@ fun MainStructure(searchUtils :SearchUtils){
         Scaffold(
             modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
+                //current backStack - current screen. There is also previous!
+                val backStackEntry by navController.currentBackStackEntryAsState()
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -75,14 +82,17 @@ fun MainStructure(searchUtils :SearchUtils){
                     ),
                     title = {},
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "")
+                        if (backStackEntry?.destination?.hasRoute<MainPageNav>() != true){
+                            Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { navController.popBackStack() }) {
+                                    Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "back")
+                                }
+                                BackText(backStackEntry)
+                            }
                         }
                     },
                     actions = {
-                        IconButton(onClick = { /* do something */ }) {
-                            Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "")
-                        }
+                        TopAppBarActions(backStackEntry)
                     },
                     scrollBehavior = scrollBehavior
                 )
@@ -90,8 +100,17 @@ fun MainStructure(searchUtils :SearchUtils){
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = CookbookPageNav(),
+                startDestination = MainPageNav,
             ) {
+                composable<MainPageNav>{ backStackEntry -> val args = backStackEntry.toRoute<CookbookPageNav>()
+                    CookbookPage(
+                        searchUtils,
+                        name = null,
+                        Modifier.padding(innerPadding),
+                        navController = navController
+                    )
+                }
+
                 composable<CookbookPageNav>{ backStackEntry -> val args = backStackEntry.toRoute<CookbookPageNav>()
                     CookbookPage(searchUtils,
                         name = args.cookbookName,
@@ -112,6 +131,44 @@ fun MainStructure(searchUtils :SearchUtils){
     }
 }
 
+@Composable
+fun BackText(entry: NavBackStackEntry?) {
+    val destination = entry?.destination
+    if(destination?.hasRoute<CookbookPageNav>() == true){
+        Text("Home",style= StyleUtils.backButtonTitle)
+    }
+    else if(destination?.hasRoute<RecipePageNav>() == true){
+        Text(entry.toRoute<RecipePageNav>().from,style= StyleUtils.backButtonTitle)
+    }
+}
+
+@Composable
+fun TopAppBarActions(entry: NavBackStackEntry?) {
+    val destination = entry?.destination
+    if(destination?.hasRoute<MainPageNav>() == true){
+
+    }
+    else if(destination?.hasRoute<CookbookPageNav>() == true){
+        IconButton(onClick = { /* do something */ }) {
+            Icon(painter = painterResource(R.drawable.baseline_add_24), contentDescription = "Add")
+        }
+        IconButton(onClick = { /* do something */ }) {
+            Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
+        }
+    }
+    else if(destination?.hasRoute<RecipePageNav>() == true){
+        IconButton(onClick = { /* do something */ }) {
+            Icon(painter = painterResource(R.drawable.baseline_edit_24), contentDescription = "Edit")
+        }
+        IconButton(onClick = { /* do something */ }) {
+            Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
+        }
+    }
+}
+
+@Serializable
+object MainPageNav
+
 @Serializable
 data class CookbookPageNav(
     val cookbookName: String? = null
@@ -122,6 +179,8 @@ data class RecipePageNav(
     val recipeId: String,
     val from: String
 )
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, showSystemUi = true)
@@ -141,15 +200,15 @@ fun AppPreview() {
                     ),
                     title = {},
                     navigationIcon = {
-                        IconButton(onClick = { /* do something */ }) {
-                            Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "")
+                        Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { /* do something */ }) {
+                                Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "")
+                            }
+                            Text("Home",style= StyleUtils.backButtonTitle)
                         }
+
                     },
-                    actions = {
-                        IconButton(onClick = { /* do something */ }) {
-                            Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "")
-                        }
-                    },
+                    actions = {},
                     scrollBehavior = scrollBehavior
                 )
             }

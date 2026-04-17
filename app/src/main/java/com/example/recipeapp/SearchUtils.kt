@@ -122,6 +122,7 @@ class StyleUtils{
     companion object {
         val bigTitle = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold)
         val smallTitle = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold)
+        val backButtonTitle = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)
         val regularText = TextStyle(fontSize = 16.sp)
 
         val cardText = TextStyle(color = Color.Black, fontSize = 15.sp, textAlign = TextAlign.Center)
