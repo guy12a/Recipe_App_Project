@@ -10,11 +10,10 @@ This is a personal project, in which I develop an Android app, to store, manage,
 - Importing recipes from Umami.com
 - Navigation between Home, Cookbooks, and Recipe page
 - Centralized class to search and provide lists of recipes, using HashMaps
+- Top app bar, consistent text style
 
 
 ## Roadmap
-
-- App design - consistent style, top bar
 
 - Format ingredients and instructions
 
@@ -32,3 +31,4 @@ This is a personal project, in which I develop an Android app, to store, manage,
 
 - Process sites to extract recipes into JSONs
 
+## Detailed Progress
