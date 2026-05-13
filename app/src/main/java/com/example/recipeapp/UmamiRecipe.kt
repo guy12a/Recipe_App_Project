@@ -117,6 +117,8 @@ fun getUmamiRecipes (context: Context): List<UmamiRecipe>{
 //Transforming Umami recipes to AppRecipe
 fun umamiToApp (umamiRecipe: UmamiRecipe): AppRecipe{
     val tags = formatTags(umamiRecipe.description)
+    val stages = mutableListOf<RecipeStage>()
+    stages.add(RecipeStage("Stage 1",umamiRecipe.recipeIngredient,formatInstructions(umamiRecipe.recipeInstructions)))
     val recipe = AppRecipe(
         umamiRecipe.name,
         umamiRecipe.image,
@@ -128,8 +130,7 @@ fun umamiToApp (umamiRecipe: UmamiRecipe): AppRecipe{
         umamiRecipe.totalTime,
         umamiRecipe.recipeYield,
         formatRecipeBooks(tags), //change this vvv
-        umamiRecipe.recipeIngredient,
-        formatInstructions(umamiRecipe.recipeInstructions),
+        stages = stages,
         0f
         )
     return recipe

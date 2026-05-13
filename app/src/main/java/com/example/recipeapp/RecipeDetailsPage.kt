@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -28,8 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,12 +42,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 
 //https://github.com/a914-gowtham/compose-ratingbar
 
 
-/*Add editing options, editing json file:
+/*Add editing options, editing Json file:
     Edit Title
     Edit Stars
     Edit Tags
@@ -65,7 +65,7 @@ fun RecipePageLayout(recipe : AppRecipe,
                      from:String)
 {
     Column(
-        modifier.fillMaxWidth().
+        modifier.fillMaxSize().
         padding(10.dp).
         verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(5.dp))
@@ -110,15 +110,21 @@ fun RecipePageLayout(recipe : AppRecipe,
             //Image(recipe.img,recipe.name, contentScale = ContentScale.Crop)
         }
 
-        //Ingredients
-        Text("Ingredients", style = StyleUtils.smallTitle)
-        Text(recipe.getIngredAsText(), style = StyleUtils.regularText)
-
-        Spacer(Modifier.height(25.dp))
-
-        //Insturctions
-        Text("Instructions", style = StyleUtils.smallTitle)
-        Text(recipe.getInstructAsText(), style = StyleUtils.regularText)
+        if(recipe.stages.isEmpty()){
+            CardStage(RecipeStage(""),true)
+        }
+        else if(recipe.stages.size==1) {
+            for(stage in recipe.stages){
+                CardStage(stage,true)
+            }
+        }
+        else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                for(stage in recipe.stages){
+                    CardStage(stage,false)
+                }
+            }
+        }
     }
 }
 
@@ -131,6 +137,51 @@ fun RecipePage(searchUtils : SearchUtils,
 ){
     var recipe = searchUtils.getRecipe(recipeId)
     RecipePageLayout(recipe,modifier,navController,from)
+}
+
+@Composable
+fun CardStage(stage: RecipeStage, onlyStage: Boolean){
+    var expanded by remember { mutableStateOf (false) }
+    Card(Modifier.fillMaxWidth()
+        .clickable(onClick = {expanded = !expanded}),
+        elevation = CardDefaults.cardElevation(5.dp),
+        shape = RoundedCornerShape(10.dp))
+    {
+        if(onlyStage){
+            CardStageContent(stage,true)
+        }
+        else if(expanded){
+            CardStageContent(stage,false)
+        }
+        else{
+            Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stage.title, modifier=Modifier.weight(1f),style = StyleUtils.smallTitle)
+                Icon(painter = painterResource(R.drawable.outline_arrow_drop_down_24), contentDescription = "expand")
+            }
+
+        }
+    }
+}
+
+@Composable
+fun CardStageContent(stage: RecipeStage, onlyStage: Boolean){
+    Column(Modifier.fillMaxWidth().padding(10.dp)) {
+        if(!onlyStage){
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stage.title, modifier=Modifier.weight(1f),style = StyleUtils.smallTitle)
+                Icon(painter = painterResource(R.drawable.baseline_arrow_drop_up_24), contentDescription = "expand")
+            }
+        }
+        //Ingredients
+        Text("Ingredients",style = StyleUtils.smallTitle)
+        Text(stage.getIngredAsText(), style = StyleUtils.regularText)
+
+        Spacer(Modifier.height(25.dp))
+
+        //Instructions
+        Text("Instructions", style = StyleUtils.smallTitle)
+        Text(stage.getInstructAsText(), style = StyleUtils.regularText)
+    }
 }
 
 

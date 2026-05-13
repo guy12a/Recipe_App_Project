@@ -30,35 +30,46 @@ data class AppRecipe (
 
     var recipeBooks: List<String> = emptyList(),
 
-    var ingredients: List<String> = emptyList(),
-    var recipeInstruct: List<String> = emptyList(),
+    var stages: List<RecipeStage> = emptyList(),
+
     var rating: Float = 0f,
 
     val id: String = UUID.randomUUID().toString(),
 ) {
 
-     fun getIngredAsText(): String{
+    fun getStageIngredAsText(stage: Int): String{
+        return ""
+    }
+
+    fun getStageInstructAsText(stage: Int): String{
+        return ""
+    }
+
+}
+
+@Serializable
+data class RecipeStage (
+    var title: String,
+    var ingredients: List<String> = emptyList(),
+    var recipeInstruct: List<String> = emptyList()
+){
+    fun getIngredAsText(): String{
         var str = ""
         for(ingr in ingredients){
             str += ingr + "\n"
         }
         return str
-     }
+    }
 
-     fun getInstructAsText(): String{
+    fun getInstructAsText(): String{
         var str = ""
         for(instr in recipeInstruct){
             str += instr + "\n"
         }
         return str
-     }
+    }
 }
 
-data class RecipeStage (
-    var title: String,
-    var ingredients: List<String> = emptyList(),
-    var recipeInstruct: List<String> = emptyList()
-)
 
 
 //Writing a single recipe to disk, doesnt create copies cause of id - rewrites

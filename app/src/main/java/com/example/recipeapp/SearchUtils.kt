@@ -129,10 +129,21 @@ class SearchUtils {
             tags.add("chocolate")
             tags.add("chocolate")
             tags.add("chocolate")
+            val ingred = mutableListOf<String>()
+            ingred.add("flour")
+            ingred.add("water")
+            val instruct = mutableListOf<String>()
+            instruct.add("mix")
+            instruct.add("bake")
+
+            val stages = mutableListOf<RecipeStage>()
+            stages.add(RecipeStage("Stage 1",ingred,instruct))
+            stages.add(RecipeStage("Stage 2",ingred,instruct))
+
             return AppRecipe("30 min Choclate Chip Cookies",
                 lst,
                 "2023-10-06T14:21:57.559Z",
-                "2023-10-06T14:21:57.559Z",tags,
+                "2023-10-06T14:21:57.559Z",tags, stages=stages,
                 recipeBooks = mutableListOf("Sweets & Desserts"))
         }
     }
