@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +40,12 @@ import com.example.recipeapp.ui.theme.RecipeAppTheme
 import com.gowtham.ratingbar.RatingBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 
 //https://github.com/a914-gowtham/compose-ratingbar
 
@@ -127,6 +133,42 @@ fun RecipePage(searchUtils : SearchUtils,
     RecipePageLayout(recipe,modifier,navController,from)
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, showSystemUi = true)
+//@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
+@Composable
+fun RecipeDetailsPreview() {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
+    RecipeAppTheme {
+        Scaffold(
+            modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    title = {Text("Hey")},
+                    navigationIcon = {
+                        Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { /* do something */ }) {
+                                Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "")
+                            }
+                            Text("Home",style= StyleUtils.backButtonTitle)
+                        }
+
+                    },
+                    actions = {},
+                    scrollBehavior = scrollBehavior
+                )
+            }
+        ) { innerPadding ->
+            RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
+        }
+    }
+}
 
 
 

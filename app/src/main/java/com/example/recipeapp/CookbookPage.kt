@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,12 +18,20 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -132,6 +141,48 @@ fun ImageCard (recipeName: String,
                 )
             }
             Text(cardTxt,Modifier.padding(2.dp),style = StyleUtils.cardText, maxLines = 3, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, showSystemUi = true)
+//@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
+@Composable
+fun CookBookPagePreview() {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
+    RecipeAppTheme {
+        Scaffold(
+            modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    title = {Text("Hey")},
+                    navigationIcon = {
+                        Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { /* do something */ }) {
+                                Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "")
+                            }
+                            Text("Home",style= StyleUtils.backButtonTitle)
+                        }
+
+                    },
+                    actions = {},
+                    scrollBehavior = scrollBehavior
+                )
+            }
+        ) { innerPadding ->
+            var map = HashMap<String,AppRecipe>()
+            map.put("Sweets", SearchUtils.exampleRec())
+            map.put("Sweet", SearchUtils.exampleRec())
+            map.put("Swes", SearchUtils.exampleRec())
+            CookbookPageLayout("Sweets & Desserts", map,null, Modifier.padding(innerPadding), navController = rememberNavController())
+
+            //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }
     }
 }

@@ -54,6 +54,12 @@ data class AppRecipe (
      }
 }
 
+data class RecipeStage (
+    var title: String,
+    var ingredients: List<String> = emptyList(),
+    var recipeInstruct: List<String> = emptyList()
+)
+
 
 //Writing a single recipe to disk, doesnt create copies cause of id - rewrites
 fun saveRecipe(context: Context, recipe: AppRecipe) {
@@ -106,3 +112,6 @@ fun loadAppRecipes(context: Context): List<AppRecipe> {
 
     return recipes
 }
+
+
+
