@@ -137,8 +137,8 @@ class SearchUtils {
             instruct.add("bake")
 
             val stages = mutableListOf<RecipeStage>()
-            stages.add(RecipeStage("Stage 1",ingred,instruct))
-            stages.add(RecipeStage("Stage 2",ingred,instruct))
+            stages.add(RecipeStage("Prep",ingred,instruct))
+            stages.add(RecipeStage("Bake",ingred,instruct))
 
             return AppRecipe("30 min Choclate Chip Cookies",
                 lst,

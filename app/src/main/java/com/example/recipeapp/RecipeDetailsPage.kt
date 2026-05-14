@@ -113,34 +113,30 @@ fun RecipePageLayout(recipe : AppRecipe,
         if(recipe.stages.isEmpty()){
             CardStage(RecipeStage(""),true)
         }
+        /*
         else if(recipe.stages.size==1) {
             for(stage in recipe.stages){
                 CardStage(stage,true)
             }
         }
+        */
         else {
+            var onlyStage = false
+            if(recipe.stages.size==1) onlyStage=true
+
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 for(stage in recipe.stages){
-                    CardStage(stage,false)
+                    CardStage(stage,onlyStage)
                 }
+                AddStageCard()
             }
         }
     }
 }
 
 @Composable
-fun RecipePage(searchUtils : SearchUtils,
-               recipeId: String,
-               modifier: Modifier = Modifier,
-               navController: NavController,
-               from: String
-){
-    var recipe = searchUtils.getRecipe(recipeId)
-    RecipePageLayout(recipe,modifier,navController,from)
-}
-
-@Composable
 fun CardStage(stage: RecipeStage, onlyStage: Boolean){
+    //controls if the cards are expanded by default or not
     var expanded by remember { mutableStateOf (false) }
     Card(Modifier.fillMaxWidth()
         .clickable(onClick = {expanded = !expanded}),
@@ -154,11 +150,25 @@ fun CardStage(stage: RecipeStage, onlyStage: Boolean){
             CardStageContent(stage,false)
         }
         else{
-            Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(vertical = 5.dp, horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stage.title, modifier=Modifier.weight(1f),style = StyleUtils.smallTitle)
                 Icon(painter = painterResource(R.drawable.outline_arrow_drop_down_24), contentDescription = "expand")
             }
 
+        }
+    }
+}
+
+@Composable
+fun AddStageCard(){
+    Card(Modifier.fillMaxWidth()
+        .clickable(onClick = {/* do something */}),
+        elevation = CardDefaults.cardElevation(5.dp),
+        shape = RoundedCornerShape(10.dp))
+    {
+        Row(Modifier.fillMaxWidth().padding(vertical = 5.dp, horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            Text("Add Stage", modifier=Modifier,style = StyleUtils.smallTitle)
+            Icon(painter = painterResource(R.drawable.baseline_add_24), contentDescription = "expand")
         }
     }
 }
@@ -169,6 +179,9 @@ fun CardStageContent(stage: RecipeStage, onlyStage: Boolean){
         if(!onlyStage){
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stage.title, modifier=Modifier.weight(1f),style = StyleUtils.smallTitle)
+                IconButton(onClick = { /* do something */ }) {
+                    Icon(painter = painterResource(R.drawable.baseline_edit_24), contentDescription = "Edit Stage")
+                }
                 Icon(painter = painterResource(R.drawable.baseline_arrow_drop_up_24), contentDescription = "expand")
             }
         }
@@ -182,6 +195,17 @@ fun CardStageContent(stage: RecipeStage, onlyStage: Boolean){
         Text("Instructions", style = StyleUtils.smallTitle)
         Text(stage.getInstructAsText(), style = StyleUtils.regularText)
     }
+}
+
+@Composable
+fun RecipePage(searchUtils : SearchUtils,
+               recipeId: String,
+               modifier: Modifier = Modifier,
+               navController: NavController,
+               from: String
+){
+    var recipe = searchUtils.getRecipe(recipeId)
+    RecipePageLayout(recipe,modifier,navController,from)
 }
 
 

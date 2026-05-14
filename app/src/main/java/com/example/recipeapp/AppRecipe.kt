@@ -37,14 +37,6 @@ data class AppRecipe (
     val id: String = UUID.randomUUID().toString(),
 ) {
 
-    fun getStageIngredAsText(stage: Int): String{
-        return ""
-    }
-
-    fun getStageInstructAsText(stage: Int): String{
-        return ""
-    }
-
 }
 
 @Serializable
