@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -41,8 +40,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.example.recipeapp.ui.theme.RecipeAppTheme
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 /* Add options to:
     Add new recipe
@@ -51,7 +48,7 @@ import kotlin.collections.component2
 
 @Composable
 fun CookbookPageLayout(title : String,
-                       map:HashMap<String,AppRecipe>,
+                       recipes:List<Pair<String, AppRecipe>>,
                        name:String?,
                        modifier: Modifier = Modifier,
                        navController: NavController){
@@ -66,11 +63,10 @@ fun CookbookPageLayout(title : String,
     {
         item (span = { GridItemSpan(maxCurrentLineSpan) }){
             var newTitle = title
-            if(title!=SearchUtils.homeName) newTitle+= " - " + map.size + " recipes"
+            if(title!=SearchUtils.homeName) newTitle+= " - " + recipes.size + " recipes"
             Text(newTitle, style = StyleUtils.bigTitle)
         }
-        items(map.entries.toList()) { entry ->
-            val (cardName, recipe) = entry
+        items(recipes) { (cardName, recipe) ->
             if(name==null)
                 ImageCard(recipe.name,
                     cardName,
@@ -98,17 +94,17 @@ fun CookbookPage(searchUtils : SearchUtils,
                  navController: NavController){
 
 
-    var map = HashMap<String,AppRecipe>()
+    var list: List<Pair<String, AppRecipe>>
     var title = ""
     if(name == null){
         title = SearchUtils.homeName
-        map = searchUtils.getCookBooksList()
+        list = searchUtils.getCookBooksList()
     }
     else{
         title = name
-        map = searchUtils.getBookRecipesAsMap(title)
+        list = searchUtils.getBookRecipesSorted(title,{it.datePublished ?: ""})
     }
-    CookbookPageLayout(title,map,name,modifier,navController)
+    CookbookPageLayout(title,list,name,modifier,navController)
 
 }
 
@@ -176,11 +172,11 @@ fun CookBookPagePreview() {
                 )
             }
         ) { innerPadding ->
-            var map = HashMap<String,AppRecipe>()
-            map.put("Sweets", SearchUtils.exampleRec())
-            map.put("Sweet", SearchUtils.exampleRec())
-            map.put("Swes", SearchUtils.exampleRec())
-            CookbookPageLayout("Sweets & Desserts", map,null, Modifier.padding(innerPadding), navController = rememberNavController())
+            var list = mutableListOf<Pair<String, AppRecipe>>()
+            list.add("Sweets" to SearchUtils.exampleRec())
+            list.add("Sweet" to SearchUtils.exampleRec())
+            list.add("Swes" to SearchUtils.exampleRec())
+            CookbookPageLayout("Sweets & Desserts", list,null, Modifier.padding(innerPadding), navController = rememberNavController())
 
             //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }

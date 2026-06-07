@@ -1,31 +1,11 @@
 package com.example.recipeapp
 
 import android.content.Context
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import androidx.navigation.compose.rememberNavController
-import com.example.recipeapp.ui.theme.RecipeAppTheme
 
 class SearchUtils {
     //map recipeId -> Recipe
@@ -35,64 +15,99 @@ class SearchUtils {
     //map tag -> list of recipeIds
     var tagsToRecipes : HashMap<String, MutableList<String>> = HashMap()
 
+    //get recipes filtered based off filters and then sorted based off of lambda
+    fun <T : Comparable<T>> getRecipesSortedFiltered(
+        bookName: String,
+        tags: Set<String> = emptySet(),
+        negTags: Set<String> = emptySet(),
+        keyword: String? = null,
+        rating: Float? = null,
+        selector: (AppRecipe) -> T
+    ) : List<Pair<String, AppRecipe>> {
 
-    //returns map of recipeName and AppRecipe, based on book
-    fun getBookRecipesAsMap(bookName: String) : HashMap<String,AppRecipe>{
-        val recipesInBook = HashMap<String,AppRecipe>()
+        return getBookRecipesFiltered(bookName,tags,negTags,keyword,rating)
+            .sortedBy { (_, recipe) -> selector(recipe) }
+
+    }
+
+    //get recipes filtered based off of tags, negative tags, keyword, and rating
+    fun getBookRecipesFiltered(
+        bookName: String,
+        tags: Set<String> = emptySet(),
+        negTags: Set<String> = emptySet(),
+        keyword: String? = null,
+        rating: Float? = null
+    ): List<Pair<String, AppRecipe>> {
+
+        return getBookRecipesAsList(bookName)
+            .filter { (_, recipe) ->
+
+                val matchesTags = tags.isEmpty() || tags.all { tag ->
+                                recipe.tags.contains(tag)
+                            }
+
+                val matchesNegTags = negTags.isEmpty() || negTags.none { tag ->
+                    recipe.tags.contains(tag)
+                }
+
+                val matchesKeyword =
+                    keyword.isNullOrBlank() ||
+                            recipe.name.contains(keyword, ignoreCase = true)
+
+                val matchesRating = rating == null || recipe.rating >= rating
+
+                matchesTags && matchesKeyword && matchesRating && matchesNegTags
+            }
+    }
+
+    //returns a list of recipes, sorted based off of lambda
+    //{it.datePublished ?: ""} for String?, {it.name} for name...
+    fun <T : Comparable<T>> getBookRecipesSorted(
+            bookName: String,
+            selector: (AppRecipe) -> T
+    ) : List<Pair<String, AppRecipe>> {
+
+        return getBookRecipesAsList(bookName)
+            .sortedBy { (_, recipe) -> selector(recipe) }
+
+    }
+
+    //returns list of recipeName and AppRecipe, based on book
+    //Used for a specific cookbook
+    fun getBookRecipesAsList(bookName: String) : List<Pair<String, AppRecipe>>{
+        val recipesInBook = mutableListOf<Pair<String, AppRecipe>>()
         if(bookName == allRecipesName){
             for(entry in recipes.entries){
-                recipesInBook.put(entry.value.name,entry.value)
+                recipesInBook.add(entry.value.name to entry.value)
             }
         }
         else if(cookBooks.containsKey(bookName)){
             for(recId in cookBooks.getValue(bookName)) {
                 val rec = recipes.getValue(recId)
-                recipesInBook.put(rec.name,rec)
+                recipesInBook.add(rec.name to rec)
             }
         }
         return recipesInBook
     }
 
-    //returns a map of cookBook name, and first recipe
-    fun getCookBooksList() : HashMap<String,AppRecipe> {
-        val map = HashMap<String,AppRecipe>()
+    //returns a list of cookBook name, and first recipe
+    //Used for home page
+    fun getCookBooksList() : List<Pair<String, AppRecipe>> {
+        val map = mutableListOf<Pair<String, AppRecipe>>()
         var flag = false
         for(book in cookBooks.keys){
             if(cookBooks.getValue(book).isEmpty())
-                map.put(book,exampleRec())
+                map.add(book to exampleRec())
             else{
-                map.put(book,recipes.getValue(cookBooks.getValue(book).first()))
+                map.add(book to recipes.getValue(cookBooks.getValue(book).first()))
                 if(!flag){
                     flag = true
-                    map.put(allRecipesName,recipes.getValue(cookBooks.getValue(book).first()))
+                    map.add(allRecipesName to recipes.getValue(cookBooks.getValue(book).first()))
                 }
             }
         }
-        if(!flag) map.put(allRecipesName,recipes.entries.toList().first().value)
+        if(!flag) map.add (allRecipesName to recipes.entries.toList().first().value)
         return map
-    }
-
-    //returns a map of recipeName and AppRecipe, based on tag and cookbook
-    fun getRecipesByTag(tag: String, bookName: String) :HashMap<String,AppRecipe>{
-        val recipesWithTag = HashMap<String,AppRecipe>()
-        if(tagsToRecipes.containsKey(tag)){
-            for(recId in tagsToRecipes.getValue(tag)) {
-                val rec = recipes.getValue(recId)
-                if(bookName == toSortName || bookName == allRecipesName || rec.recipeBooks.contains(bookName))
-                    recipesWithTag.put(rec.name,rec)
-            }
-        }
-        return recipesWithTag
-    }
-
-    //returns all recipes of a cookbook
-    fun getBookRecipesAsList(bookName: String) : MutableList<AppRecipe> {
-        val recipesInBook = mutableListOf<AppRecipe>()
-        if(cookBooks.containsKey(bookName)){
-            for(recId in cookBooks.getValue(bookName))
-                recipesInBook.add(recipes.getValue(recId))
-        }
-        return recipesInBook
     }
 
     fun getRecipe(recipeId: String): AppRecipe{
@@ -116,6 +131,7 @@ class SearchUtils {
             }
         }
     }
+
 
     companion object {
         val allRecipesName = "All Recipes"

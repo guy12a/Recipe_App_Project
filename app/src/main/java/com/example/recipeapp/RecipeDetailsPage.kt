@@ -42,9 +42,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 
 //https://github.com/a914-gowtham/compose-ratingbar
@@ -95,6 +92,9 @@ fun RecipePageLayout(recipe : AppRecipe,
                     Text(tag,Modifier.padding(9.dp,4.dp),fontSize = 18.sp)
                 }
             }
+            Card(shape = RoundedCornerShape(15.dp), modifier = Modifier.clickable(onClick = {/* do something */})){
+                Text("+ Add Tag",Modifier.padding(9.dp,4.dp),fontSize = 18.sp)
+            }
         }
 
         //Image of Recipe
@@ -111,31 +111,24 @@ fun RecipePageLayout(recipe : AppRecipe,
         }
 
         if(recipe.stages.isEmpty()){
-            CardStage(RecipeStage(""),true)
+            StageCard(RecipeStage(""),true)
         }
-        /*
-        else if(recipe.stages.size==1) {
-            for(stage in recipe.stages){
-                CardStage(stage,true)
-            }
-        }
-        */
         else {
             var onlyStage = false
             if(recipe.stages.size==1) onlyStage=true
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 for(stage in recipe.stages){
-                    CardStage(stage,onlyStage)
+                    StageCard(stage,onlyStage)
                 }
-                AddStageCard()
+                AddStageButtonCard()
             }
         }
     }
 }
 
 @Composable
-fun CardStage(stage: RecipeStage, onlyStage: Boolean){
+fun StageCard(stage: RecipeStage, onlyStage: Boolean){
     //controls if the cards are expanded by default or not
     var expanded by remember { mutableStateOf (false) }
     Card(Modifier.fillMaxWidth()
@@ -144,10 +137,10 @@ fun CardStage(stage: RecipeStage, onlyStage: Boolean){
         shape = RoundedCornerShape(10.dp))
     {
         if(onlyStage){
-            CardStageContent(stage,true)
+            ExpandedStageContent(stage,true)
         }
         else if(expanded){
-            CardStageContent(stage,false)
+            ExpandedStageContent(stage,false)
         }
         else{
             Row(Modifier.fillMaxWidth().padding(vertical = 5.dp, horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -160,21 +153,7 @@ fun CardStage(stage: RecipeStage, onlyStage: Boolean){
 }
 
 @Composable
-fun AddStageCard(){
-    Card(Modifier.fillMaxWidth()
-        .clickable(onClick = {/* do something */}),
-        elevation = CardDefaults.cardElevation(5.dp),
-        shape = RoundedCornerShape(10.dp))
-    {
-        Row(Modifier.fillMaxWidth().padding(vertical = 5.dp, horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-            Text("Add Stage", modifier=Modifier,style = StyleUtils.smallTitle)
-            Icon(painter = painterResource(R.drawable.baseline_add_24), contentDescription = "expand")
-        }
-    }
-}
-
-@Composable
-fun CardStageContent(stage: RecipeStage, onlyStage: Boolean){
+fun ExpandedStageContent(stage: RecipeStage, onlyStage: Boolean){
     Column(Modifier.fillMaxWidth().padding(10.dp)) {
         if(!onlyStage){
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -194,6 +173,20 @@ fun CardStageContent(stage: RecipeStage, onlyStage: Boolean){
         //Instructions
         Text("Instructions", style = StyleUtils.smallTitle)
         Text(stage.getInstructAsText(), style = StyleUtils.regularText)
+    }
+}
+
+@Composable
+fun AddStageButtonCard(){
+    Card(Modifier.fillMaxWidth()
+        .clickable(onClick = {/* do something */}),
+        elevation = CardDefaults.cardElevation(5.dp),
+        shape = RoundedCornerShape(10.dp))
+    {
+        Row(Modifier.fillMaxWidth().padding(vertical = 5.dp, horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            Text("Add Stage", modifier=Modifier,style = StyleUtils.smallTitle)
+            Icon(painter = painterResource(R.drawable.baseline_add_24), contentDescription = "expand")
+        }
     }
 }
 
@@ -229,7 +222,7 @@ fun RecipeDetailsPreview() {
                     navigationIcon = {
                         Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = { /* do something */ }) {
-                                Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "")
+                                Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "back")
                             }
                             Text("Home",style= StyleUtils.backButtonTitle)
                         }

@@ -49,7 +49,8 @@ class MainActivity : ComponentActivity() {
         for(recipe in recipes){
             saveRecipe(this,recipe)
         }
-        */
+         */
+
 
         val searchUtils = SearchUtils()
         searchUtils.loadRecipes(this)
@@ -213,11 +214,11 @@ fun AppPreview() {
                 )
             }
         ) { innerPadding ->
-            var map = HashMap<String,AppRecipe>()
-            map.put("Sweets", SearchUtils.exampleRec())
-            map.put("Sweet", SearchUtils.exampleRec())
-            map.put("Swes", SearchUtils.exampleRec())
-            CookbookPageLayout(SearchUtils.homeName, map,null, Modifier.padding(innerPadding), navController = rememberNavController())
+            var list = mutableListOf<Pair<String, AppRecipe>>()
+            list.add("Sweets" to SearchUtils.exampleRec())
+            list.add("Sweet" to SearchUtils.exampleRec())
+            list.add("Swes" to SearchUtils.exampleRec())
+            CookbookPageLayout(SearchUtils.homeName, list,null, Modifier.padding(innerPadding), navController = rememberNavController())
 
             //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }
