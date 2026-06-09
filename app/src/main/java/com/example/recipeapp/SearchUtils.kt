@@ -132,6 +132,43 @@ class SearchUtils {
         }
     }
 
+    //returns all tags sorted alphabetically
+    fun getTags(): List<String>{
+        return tagsToRecipes.keys.toList().sorted()
+    }
+
+    //returns all tags not contained in recipe
+    fun getTagsWithout(recipe: AppRecipe) :List<String>{
+        return getTags().filter {tag -> tag !in recipe.tags}
+    }
+
+    fun updateRecipe(context: Context,recipe: AppRecipe){
+        var oldRecipe = recipes.get(recipe.id)
+
+        //remove recipe from all tags
+        if(oldRecipe != null){
+            for(tag in oldRecipe.tags){
+                tagsToRecipes[tag]?.remove(oldRecipe.id)
+
+                if (tagsToRecipes[tag]?.isEmpty() == true) {
+                    tagsToRecipes.remove(tag)
+                }
+            }
+        }
+
+        //add it back to all tags
+        for (tag in recipe.tags) {
+            val list = tagsToRecipes.getOrPut(tag) { mutableListOf() }
+            if (!list.contains(recipe.id)) {
+                list.add(recipe.id)
+            }
+        }
+
+        recipes.put(recipe.id,recipe)
+
+        saveRecipe(context,recipe)
+
+    }
 
     companion object {
         val allRecipesName = "All Recipes"
