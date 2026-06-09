@@ -144,7 +144,7 @@ fun RecipePageLayout(searchUtils : SearchUtils,
                 sheetState = sheetState
             ){
                 val context = LocalContext.current
-                BottomTagSheet(recipe,searchUtils.getTagsWithout(recipe),{tag->viewModel.addTag(context,tag)},{openTagSheet=false})
+                BottomTagSheet(recipe,searchUtils.getTagsWithout(recipe),{tag->viewModel.addTag(context,tag.lowercase())},{openTagSheet=false})
             }
         }
     }
