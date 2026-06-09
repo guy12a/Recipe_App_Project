@@ -93,21 +93,21 @@ class SearchUtils {
     //returns a list of cookBook name, and first recipe
     //Used for home page
     fun getCookBooksList() : List<Pair<String, AppRecipe>> {
-        val map = mutableListOf<Pair<String, AppRecipe>>()
+        val list = mutableListOf<Pair<String, AppRecipe>>()
         var flag = false
         for(book in cookBooks.keys){
             if(cookBooks.getValue(book).isEmpty())
-                map.add(book to exampleRec())
+                list.add(book to exampleRec())
             else{
-                map.add(book to recipes.getValue(cookBooks.getValue(book).first()))
+                list.add(book to recipes.getValue(cookBooks.getValue(book).first()))
                 if(!flag){
                     flag = true
-                    map.add(allRecipesName to recipes.getValue(cookBooks.getValue(book).first()))
+                    list.add(allRecipesName to recipes.getValue(cookBooks.getValue(book).first()))
                 }
             }
         }
-        if(!flag) map.add (allRecipesName to recipes.entries.toList().first().value)
-        return map
+        if(!flag) list.add (allRecipesName to recipes.entries.toList().first().value)
+        return list
     }
 
     fun getRecipe(recipeId: String): AppRecipe{
@@ -134,6 +134,12 @@ class SearchUtils {
 
     //returns all tags sorted alphabetically
     fun getTags(): List<String>{
+        for(tag in tagsToRecipes.keys){
+            if(tag=="testTag"){
+                print("testTag")
+                print(tagsToRecipes[tag])
+            }
+        }
         return tagsToRecipes.keys.toList().sorted()
     }
 
@@ -142,6 +148,7 @@ class SearchUtils {
         return getTags().filter {tag -> tag !in recipe.tags}
     }
 
+    //rewrite a recipe to disk
     fun updateRecipe(context: Context,recipe: AppRecipe){
         var oldRecipe = recipes.get(recipe.id)
 

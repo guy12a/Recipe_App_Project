@@ -102,7 +102,7 @@ fun CookbookPage(searchUtils : SearchUtils,
     }
     else{
         title = name
-        list = searchUtils.getBookRecipesSorted(title,{it.datePublished ?: ""})
+        list = searchUtils.getBookRecipesSorted(title,{it.dateChanged ?: ""})
     }
     CookbookPageLayout(title,list,name,modifier,navController)
 

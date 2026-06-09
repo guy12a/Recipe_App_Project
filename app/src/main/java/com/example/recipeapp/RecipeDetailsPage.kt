@@ -2,6 +2,7 @@ package com.example.recipeapp
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,8 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -51,6 +54,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
+import kotlin.math.exp
 
 //https://github.com/a914-gowtham/compose-ratingbar
 
@@ -85,6 +90,10 @@ fun RecipePageLayout(searchUtils : SearchUtils,
     val currentRecipe by viewModel.recipe.collectAsState()
     val recipe = currentRecipe ?: return
 
+    val context = LocalContext.current
+
+    var openTag by remember { mutableStateOf<String?>(null) }
+
     Column(
         modifier.fillMaxSize().
         padding(10.dp).
@@ -101,9 +110,12 @@ fun RecipePageLayout(searchUtils : SearchUtils,
         //Tags Bar
         FlowRow(modifier= Modifier, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             for (tag in recipe.tags){
-                Card(shape = RoundedCornerShape(15.dp)){
-                    Text(tag,Modifier.padding(9.dp,4.dp),fontSize = 18.sp)
-                }
+                TagAndMenu(tag,
+                    isExpanded = openTag == tag,
+                    onOpen = { openTag = tag },
+                    onDismiss = { openTag = null },
+                    onTagRemoved = {t -> openTag = null
+                        viewModel.removeTag(context,t)})
             }
             Card(shape = RoundedCornerShape(15.dp), modifier = Modifier.clickable(onClick = {openTagSheet = true})){
                 Text("+ Add Tag",Modifier.padding(9.dp,4.dp),fontSize = 18.sp)
@@ -143,8 +155,39 @@ fun RecipePageLayout(searchUtils : SearchUtils,
                 onDismissRequest = { openTagSheet = false },
                 sheetState = sheetState
             ){
-                val context = LocalContext.current
                 BottomTagSheet(recipe,searchUtils.getTagsWithout(recipe),{tag->viewModel.addTag(context,tag.lowercase())},{openTagSheet=false})
+            }
+        }
+    }
+}
+
+@Composable
+fun TagAndMenu(tag: String,
+               isExpanded: Boolean,
+               onTagRemoved: (String) -> Unit,
+               onOpen: () -> Unit,
+               onDismiss: () -> Unit,)
+{
+    Box {
+        Card(
+            shape = RoundedCornerShape(15.dp),
+            modifier = Modifier.clickable(onClick = { onOpen() })
+        ) {
+            Text(tag, Modifier.padding(9.dp, 4.dp), fontSize = 18.sp)
+            DropdownMenu(
+                expanded = isExpanded,
+                onDismissRequest = { onDismiss() })
+            {
+                DropdownMenuItem(
+                    text = { Text("Remove Tag") },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.outline_delete_24),
+                            contentDescription = "expand"
+                        )
+                    },
+                    onClick = { onTagRemoved(tag) }
+                )
             }
         }
     }
@@ -326,13 +369,12 @@ fun RecipeDetailsPreview() {
             tags.add("sweet")
             tags.add("chocolate")
             val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            Text("",modifier = Modifier.padding(innerPadding))
             //ModalBottomSheet(onDismissRequest = { }, sheetState = sheetState)
             //{
-                BottomTagSheet(SearchUtils.exampleRec(),tags,{tag -> tags.add(tag)},{})
+                //BottomTagSheet(SearchUtils.exampleRec(),tags,{tag -> tags.add(tag)},{})
             //}
 
-            //RecipePageLayout(SearchUtils(),SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
+            RecipePageLayout(SearchUtils(),SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }
     }
 }
