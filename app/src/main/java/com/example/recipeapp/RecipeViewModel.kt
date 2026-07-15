@@ -116,6 +116,52 @@ class RecipeViewModel (
         // update your existing system
         searchUtils.updateRecipe(context,updated)
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun editName(context: Context, updatedName: String) {
+        val current = _recipe.value ?: return
+        val updated = current.copy(
+            name = updatedName,
+            dateChanged = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
+        // update state (this updates UI)
+        _recipe.value = updated
+
+        // update your existing system
+        searchUtils.updateRecipe(context,updated)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun addBook(context: Context, book: String) {
+        val current = _recipe.value ?: return
+        val updated = current.copy(
+            recipeBooks = current.recipeBooks + book,
+            dateChanged = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
+
+        // update state (this updates UI)
+        _recipe.value = updated
+
+
+        // update your existing system
+        searchUtils.updateRecipe(context,updated)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun removeBook(context: Context, book: String) {
+        val current = _recipe.value ?: return
+        val updated = current.copy(
+            recipeBooks = current.recipeBooks - book,
+            dateChanged = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
+
+        // update state (this updates UI)
+        _recipe.value = updated
+
+        // update your existing system
+        searchUtils.updateRecipe(context,updated)
+    }
+
 }
 
 class RecipeViewModelFactory(

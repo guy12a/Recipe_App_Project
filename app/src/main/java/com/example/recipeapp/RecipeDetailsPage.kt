@@ -1,7 +1,5 @@
 package com.example.recipeapp
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -80,7 +78,8 @@ fun RecipePageLayout(searchUtils : SearchUtils,
                      originalRecipe : AppRecipe,
                      modifier: Modifier = Modifier,
                      navController: NavController,
-                     from:String)
+                     from:String,
+                     setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit)
 {
     //creates a viewmodel, that works as a safe
     val viewModel: RecipeViewModel = viewModel(
@@ -93,7 +92,6 @@ fun RecipePageLayout(searchUtils : SearchUtils,
     val recipe = currentRecipe ?: return
 
     val context = LocalContext.current
-
 
     //controls the adding of tags using bottom sheet
     var openTagSheet by remember { mutableStateOf (false) }
@@ -112,6 +110,21 @@ fun RecipePageLayout(searchUtils : SearchUtils,
 
     //remove stage alert
     var removedStage by remember { mutableStateOf<RecipeStage?>(null) }
+
+    //controls the editing of recipe name
+    var openNameSheet by remember { mutableStateOf (false) }
+    val nameSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
+        newValue != SheetValue.Hidden
+    })
+
+    //controls if top bar dropdown is open
+    var openTopDropDown by remember { mutableStateOf (false) }
+
+    //controls editing recipe book
+    var openAddBookSheet by remember { mutableStateOf (false) }
+    val addBookSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
+        newValue != SheetValue.Hidden
+    })
 
 
     Column(
@@ -216,10 +229,114 @@ fun RecipePageLayout(searchUtils : SearchUtils,
                 )
             }
         }
+
+        LaunchedEffect(recipe.id) {
+            setTopBarActions({
+                IconButton(onClick = { openNameSheet=true }) {
+                    Icon(painter = painterResource(R.drawable.baseline_edit_24), contentDescription = "Edit")
+                }
+                IconButton(onClick = { openTopDropDown=true }) {
+                    Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
+                    TopBarDropDown(openTopDropDown,{openTopDropDown=false},{
+                        openAddBookSheet=true
+                        openTopDropDown=false
+                    })
+                }
+            })
+        }
+
+        if(openNameSheet){
+            ModalBottomSheet(
+                onDismissRequest = { openNameSheet = false },
+                sheetState = nameSheetState
+            ){
+                EditNameBottomSheet(recipe.name,{newName->viewModel.editName(context,newName)},{openNameSheet=false})
+            }
+        }
+
+        if(openAddBookSheet){
+            ModalBottomSheet(
+                onDismissRequest = { openAddBookSheet = false },
+                sheetState = addBookSheetState
+            ){
+                AddRecipeToCookbook(recipe.recipeBooks,{ recipeBook->viewModel.addBook(context,recipeBook)},{openAddBookSheet=false})
+            }
+        }
     }
 }
 
+//========================== Top App Bar ==========================
+
+@Composable
+fun EditNameBottomSheet(
+    recipeName:String,
+    onNameEdited: (String) -> Unit,
+    onDismiss: () -> Unit
+){
+    val nameField = rememberTextFieldState(initialText = recipeName)
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(5.dp))
+    {
+        Row() {
+            Text("Edit Recipe Name", modifier=Modifier.weight(1f),style = StyleUtils.bigTitle)
+            Button(onClick = {
+                onNameEdited(nameField.text.toString())
+                onDismiss()})
+            {
+                Text("Save")
+            }
+            Button(onClick = {onDismiss()}) {
+                Text("Cancel")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+        OutlinedTextField(
+            state = nameField,
+            placeholder = { Text("") },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun AddRecipeToCookbook(
+    recipeCookbooks:List<String>,
+    onBookEdited: (String) -> Unit,
+    onDismiss: () -> Unit
+){
+}
+
+@Composable
+fun TopBarDropDown(
+    isExpanded: Boolean,
+    onDismiss: () -> Unit,
+    onAddBook: () -> Unit
+){
+    DropdownMenu(
+        expanded = isExpanded,
+        onDismissRequest = { onDismiss() },
+        shape = RoundedCornerShape(16.dp),
+        tonalElevation = 8.dp,
+        shadowElevation = 8.dp
+    )
+    {
+        DropdownMenuItem(
+            text = { Text("Add to Other Cookbook") },
+            onClick = { onAddBook }
+        )
+    }
+}
+
+
+
 //========================== Stages ==========================
+
 @Composable
 fun StageCard(stage: RecipeStage, onlyStage: Boolean, onStageEdited: (updatedStage: RecipeStage) -> Unit,onStageRemove: (removedStage: RecipeStage) -> Unit){
     //controls if the cards are expanded by default or not
@@ -401,6 +518,7 @@ fun StageRemoveAlert(
 }
 
 //======================= Tags Editing =======================
+
 @Composable
 fun TagAndMenu(tag: String,
                isExpanded: Boolean,
@@ -419,7 +537,6 @@ fun TagAndMenu(tag: String,
             shape = RoundedCornerShape(16.dp),
             tonalElevation = 8.dp,
             shadowElevation = 8.dp
-
         )
         {
             DropdownMenuItem(
@@ -503,8 +620,7 @@ fun BottomTagSheet(
 
 //=============================================================
 
-
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipePage(searchUtils : SearchUtils,
                recipeId: String,
@@ -514,19 +630,8 @@ fun RecipePage(searchUtils : SearchUtils,
                setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit
 ){
     var recipe = searchUtils.getRecipe(recipeId)
-    LaunchedEffect(recipe.id) {
-        setTopBarActions({
-            IconButton(onClick = { /* do something */ }) {
-                Icon(painter = painterResource(R.drawable.baseline_edit_24), contentDescription = "Edit")
-            }
-            IconButton(onClick = { /* do something */ }) {
-                Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
-            }
-        })
-    }
-    RecipePageLayout(searchUtils,recipe,modifier,navController,from)
+    RecipePageLayout(searchUtils,recipe,modifier,navController,from,setTopBarActions)
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, showSystemUi = true)
@@ -539,9 +644,16 @@ fun RecipeDetailsPreview() {
     /*
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = { }, sheetState = sheetState){
-        EditStageBottomSheet(SearchUtils.exampleRec().stages[0],{},{})
+        EditNameBottomSheet(SearchUtils.exampleRec().name,{},{})
     }
 
+     */
+
+    /*
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = { }, sheetState = sheetState){
+        EditStageBottomSheet(SearchUtils.exampleRec().stages[0],{},{})
+    }
      */
 
 
@@ -549,7 +661,23 @@ fun RecipeDetailsPreview() {
         .fillMaxSize()
         .nestedScroll(scrollBehavior.nestedScrollConnection),topBar = { TopAppBar(colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface,titleContentColor = MaterialTheme.colorScheme.onPrimary,
                     ),title = {Text("Hey")},navigationIcon = {Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {IconButton(onClick = { /* do something */ }) {Icon(painter = painterResource(R.drawable.baseline_arrow_back_ios_24), contentDescription = "back") }
-        Text("Home",style= StyleUtils.backButtonTitle)} }, actions = {}, scrollBehavior = scrollBehavior) }) { innerPadding ->
+        Text("Home",style= StyleUtils.backButtonTitle)} }, actions = {
+        IconButton(onClick = { /* do something */ }) {
+            Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
+            DropdownMenu(
+                expanded = true,
+                onDismissRequest = { },
+                shape = RoundedCornerShape(16.dp),
+                tonalElevation = 8.dp,
+                shadowElevation = 8.dp
+            ){
+                DropdownMenuItem(
+                    text = { Text("Remove Tag") },
+                    onClick = {}
+                )
+            }
+        }
+    }, scrollBehavior = scrollBehavior) }) { innerPadding ->
             val tags = mutableListOf<String>()
             tags.add("dessert")
             tags.add("asian")
@@ -561,11 +689,9 @@ fun RecipeDetailsPreview() {
                 //BottomTagSheet(SearchUtils.exampleRec(),tags,{tag -> tags.add(tag)},{})
             //}
 
-            RecipePageLayout(SearchUtils(),SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
+            RecipePageLayout(SearchUtils(),SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back",{})
         }
     }
-
-
 
 }
 
