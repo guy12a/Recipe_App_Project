@@ -41,16 +41,17 @@ data class AppRecipe (
 
 @Serializable
 data class RecipeStage (
-    var title: String,
-    var ingredients: List<String> = emptyList(),
-    var recipeInstruct: List<String> = emptyList()
+    val title: String,
+    val ingredients: List<String> = emptyList(),
+    val recipeInstruct: List<String> = emptyList(),
+    val id: String = UUID.randomUUID().toString(),
 ){
     fun getIngredAsText(): String{
         var str = ""
         for(ingr in ingredients){
             str += ingr + "\n"
         }
-        return str
+        return str.dropLast(1)
     }
 
     fun getInstructAsText(): String{
@@ -58,8 +59,9 @@ data class RecipeStage (
         for(instr in recipeInstruct){
             str += instr + "\n"
         }
-        return str
+        return str.dropLast(1)
     }
+    
 }
 
 

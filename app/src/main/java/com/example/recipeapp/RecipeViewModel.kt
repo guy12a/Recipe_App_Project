@@ -50,6 +50,58 @@ class RecipeViewModel (
         // update your existing system
         searchUtils.updateRecipe(context,updated)
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun editStage(context: Context, updatedStage: RecipeStage) {
+        val current = _recipe.value ?: return
+
+        val newStages = mutableListOf<RecipeStage>()
+        for(stage in current.stages){
+            if(stage.id == updatedStage.id){
+                newStages.add(updatedStage)
+            }
+            else{
+                newStages.add(stage)
+            }
+        }
+        val updated = current.copy(
+            stages = newStages,
+            dateChanged = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
+        // update state (this updates UI)
+        _recipe.value = updated
+
+        // update your existing system
+        searchUtils.updateRecipe(context,updated)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun addStage(context: Context){
+        val current = _recipe.value ?: return
+        val updated = current.copy(
+            stages = current.stages+ RecipeStage(""),
+            dateChanged = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
+        // update state (this updates UI)
+        _recipe.value = updated
+
+        // update your existing system
+        searchUtils.updateRecipe(context,updated)
+    }
+    
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun removeStage(context: Context, removedStage: RecipeStage){
+        val current = _recipe.value ?: return
+        val updated = current.copy(
+            stages = current.stages- removedStage,
+            dateChanged = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
+        // update state (this updates UI)
+        _recipe.value = updated
+
+        // update your existing system
+        searchUtils.updateRecipe(context,updated)
+    }
 }
 
 class RecipeViewModelFactory(

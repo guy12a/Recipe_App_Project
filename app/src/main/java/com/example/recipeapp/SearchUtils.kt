@@ -150,10 +150,10 @@ class SearchUtils {
 
     //rewrite a recipe to disk
     fun updateRecipe(context: Context,recipe: AppRecipe){
-        var oldRecipe = recipes.get(recipe.id)
+        var oldRecipe = recipes[recipe.id]
 
-        //remove recipe from all tags
-        if(oldRecipe != null){
+        if (oldRecipe != null && oldRecipe.tags != recipe.tags) {
+            //remove recipe from all tags
             for(tag in oldRecipe.tags){
                 tagsToRecipes[tag]?.remove(oldRecipe.id)
 
@@ -161,20 +161,19 @@ class SearchUtils {
                     tagsToRecipes.remove(tag)
                 }
             }
-        }
 
-        //add it back to all tags
-        for (tag in recipe.tags) {
-            val list = tagsToRecipes.getOrPut(tag) { mutableListOf() }
-            if (!list.contains(recipe.id)) {
-                list.add(recipe.id)
+            //add it back to all tags
+            for (tag in recipe.tags) {
+                val list = tagsToRecipes.getOrPut(tag) { mutableListOf() }
+                if (!list.contains(recipe.id)) {
+                    list.add(recipe.id)
+                }
             }
         }
 
-        recipes.put(recipe.id,recipe)
+        recipes[recipe.id]=recipe
 
         saveRecipe(context,recipe)
-
     }
 
     companion object {
@@ -198,7 +197,7 @@ class SearchUtils {
 
             val stages = mutableListOf<RecipeStage>()
             stages.add(RecipeStage("Prep",ingred,instruct))
-            stages.add(RecipeStage("Bake",ingred,instruct))
+            stages.add(RecipeStage("Bake", ingredients = emptyList(),emptyList()))
 
             return AppRecipe("30 min Choclate Chip Cookies",
                 lst,
