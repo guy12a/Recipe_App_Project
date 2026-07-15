@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +28,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -91,7 +93,8 @@ fun CookbookPageLayout(title : String,
 fun CookbookPage(searchUtils : SearchUtils,
                  name: String?,
                  modifier: Modifier = Modifier,
-                 navController: NavController){
+                 navController: NavController,
+                 setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit){
 
 
     var list: List<Pair<String, AppRecipe>>
@@ -99,10 +102,33 @@ fun CookbookPage(searchUtils : SearchUtils,
     if(name == null){
         title = SearchUtils.homeName
         list = searchUtils.getCookBooksList()
+        LaunchedEffect(title){
+            setTopBarActions({
+                IconButton(onClick = { /* do something */ }) {
+                    Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
+                }
+            })
+        }
     }
     else{
         title = name
         list = searchUtils.getBookRecipesSorted(title,{it.dateChanged ?: ""})
+        LaunchedEffect(title) {
+            setTopBarActions({
+                IconButton(onClick = { /* do something */ }) {
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_add_24),
+                        contentDescription = "Add"
+                    )
+                }
+                IconButton(onClick = { /* do something */ }) {
+                    Icon(
+                        painter = painterResource(R.drawable.outline_more_vert_24),
+                        contentDescription = "More"
+                    )
+                }
+            })
+        }
     }
     CookbookPageLayout(title,list,name,modifier,navController)
 

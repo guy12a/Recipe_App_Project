@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -20,6 +21,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -68,6 +72,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainStructure(searchUtils :SearchUtils){
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    var topBarActions by remember {
+        mutableStateOf<@Composable RowScope.() -> Unit>({})
+    }
 
     RecipeAppTheme {
         val navController = rememberNavController()
@@ -94,7 +101,7 @@ fun MainStructure(searchUtils :SearchUtils){
                         }
                     },
                     actions = {
-                        TopAppBarActions(backStackEntry)
+                        topBarActions()
                     },
                     scrollBehavior = scrollBehavior
                 )
@@ -109,14 +116,20 @@ fun MainStructure(searchUtils :SearchUtils){
                         searchUtils,
                         name = null,
                         Modifier.padding(innerPadding),
-                        navController = navController
+                        navController = navController,
+                        setTopBarActions = { actions ->
+                            topBarActions = actions
+                        }
                     )
                 }
                 composable<CookbookPageNav>{ backStackEntry -> val args = backStackEntry.toRoute<CookbookPageNav>()
                     CookbookPage(searchUtils,
                         name = args.cookbookName,
                         Modifier.padding(innerPadding),
-                        navController = navController)
+                        navController = navController,
+                        setTopBarActions = { actions ->
+                            topBarActions = actions
+                        })
                 }
                 composable<RecipePageNav> { backStackEntry -> val args = backStackEntry.toRoute<RecipePageNav>()
                     RecipePage(
@@ -124,7 +137,10 @@ fun MainStructure(searchUtils :SearchUtils){
                         recipeId = args.recipeId,
                         Modifier.padding(innerPadding),
                         navController = navController,
-                        from = args.from
+                        from = args.from,
+                        setTopBarActions = { actions ->
+                            topBarActions = actions
+                        }
                     )
                 }
             }
@@ -143,6 +159,7 @@ fun BackText(entry: NavBackStackEntry?) {
     }
 }
 
+/*
 @Composable
 fun TopAppBarActions(entry: NavBackStackEntry?) {
     val destination = entry?.destination
@@ -168,6 +185,7 @@ fun TopAppBarActions(entry: NavBackStackEntry?) {
         }
     }
 }
+ */
 
 @Serializable
 object MainPageNav

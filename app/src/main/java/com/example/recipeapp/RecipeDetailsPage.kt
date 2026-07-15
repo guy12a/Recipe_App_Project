@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,6 +48,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -92,15 +94,21 @@ fun RecipePageLayout(searchUtils : SearchUtils,
 
     val context = LocalContext.current
 
+
     //controls the adding of tags using bottom sheet
     var openTagSheet by remember { mutableStateOf (false) }
-    val tagSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val tagSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
+        newValue != SheetValue.Hidden
+    })
+
     //controls which tag has its expanded box opened - for removing tags and the like
     var openTagBox by remember { mutableStateOf<String?>(null) }
 
     //controls the editing of a stage info
     var editStage by remember { mutableStateOf<RecipeStage?>(null) }
-    val editingStageSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val editingStageSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true,{ newValue ->
+        newValue != SheetValue.Hidden
+    })
 
     //remove stage alert
     var removedStage by remember { mutableStateOf<RecipeStage?>(null) }
@@ -118,7 +126,9 @@ fun RecipePageLayout(searchUtils : SearchUtils,
 
         //Star Rating
         var rating: Float by remember { mutableStateOf(recipe.rating) }
-        Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.Start) { RatingBar(value = rating, onValueChange = {rating = it}, onRatingChanged = {}) }
+        Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.Start) {
+            RatingBar(value = rating, onValueChange = {rating = it}, onRatingChanged = {viewModel.editRating(context,rating)})
+        }
 
         //Tags Bar
         FlowRow(modifier= Modifier, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -149,6 +159,10 @@ fun RecipePageLayout(searchUtils : SearchUtils,
                 placeholder = painterResource(R.drawable.placeholder)
             )
             //Image(recipe.img,recipe.name, contentScale = ContentScale.Crop)
+        }
+
+        Button({}) {
+            Text("Double of Halve")
         }
 
         if(recipe.stages.isEmpty()){
@@ -489,14 +503,27 @@ fun BottomTagSheet(
 
 //=============================================================
 
+
+
 @Composable
 fun RecipePage(searchUtils : SearchUtils,
                recipeId: String,
                modifier: Modifier = Modifier,
                navController: NavController,
-               from: String
+               from: String,
+               setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit
 ){
     var recipe = searchUtils.getRecipe(recipeId)
+    LaunchedEffect(recipe.id) {
+        setTopBarActions({
+            IconButton(onClick = { /* do something */ }) {
+                Icon(painter = painterResource(R.drawable.baseline_edit_24), contentDescription = "Edit")
+            }
+            IconButton(onClick = { /* do something */ }) {
+                Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
+            }
+        })
+    }
     RecipePageLayout(searchUtils,recipe,modifier,navController,from)
 }
 
@@ -509,13 +536,15 @@ fun RecipeDetailsPreview() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     //TagAndMenu("Sweets",true,{tag->},{},{})
 
-
+    /*
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = { }, sheetState = sheetState){
         EditStageBottomSheet(SearchUtils.exampleRec().stages[0],{},{})
     }
 
-    /*
+     */
+
+
     RecipeAppTheme {Scaffold(modifier = Modifier
         .fillMaxSize()
         .nestedScroll(scrollBehavior.nestedScrollConnection),topBar = { TopAppBar(colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface,titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -535,7 +564,7 @@ fun RecipeDetailsPreview() {
             RecipePageLayout(SearchUtils(),SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }
     }
-     */
+
 
 
 }

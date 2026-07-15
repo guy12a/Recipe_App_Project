@@ -102,6 +102,20 @@ class RecipeViewModel (
         // update your existing system
         searchUtils.updateRecipe(context,updated)
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun editRating(context: Context, updatedRating: Float) {
+        val current = _recipe.value ?: return
+        val updated = current.copy(
+            rating = updatedRating,
+            dateChanged = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
+        // update state (this updates UI)
+        _recipe.value = updated
+
+        // update your existing system
+        searchUtils.updateRecipe(context,updated)
+    }
 }
 
 class RecipeViewModelFactory(
