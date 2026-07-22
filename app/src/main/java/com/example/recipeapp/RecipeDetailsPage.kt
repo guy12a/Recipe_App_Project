@@ -61,16 +61,6 @@ import kotlinx.coroutines.launch
 
 //https://github.com/a914-gowtham/compose-ratingbar
 
-
-/*Add editing options, editing Json file:
-    Edit Title
-    Edit Stars
-    Edit Tags
-    Edit Ingredients
-    Edit Instructions
-* */
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipePageLayout(searchUtils : SearchUtils,

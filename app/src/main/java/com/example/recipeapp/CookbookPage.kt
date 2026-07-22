@@ -96,7 +96,6 @@ fun CookbookPage(searchUtils : SearchUtils,
                  navController: NavController,
                  setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit){
 
-
     var list: List<Pair<String, AppRecipe>>
     var title = ""
     if(name == null){

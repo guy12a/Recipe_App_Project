@@ -154,21 +154,45 @@ class SearchUtils {
     fun updateRecipe(context: Context,recipe: AppRecipe){
         var oldRecipe = recipes[recipe.id]
 
-        if (oldRecipe != null && oldRecipe.tags != recipe.tags) {
-            //remove recipe from all tags
-            for(tag in oldRecipe.tags){
-                tagsToRecipes[tag]?.remove(oldRecipe.id)
+        if (oldRecipe != null) {
+            if(oldRecipe.tags != recipe.tags){
+                //remove recipe from all tags
+                for(tag in oldRecipe.tags){
+                    tagsToRecipes[tag]?.remove(oldRecipe.id)
 
-                if (tagsToRecipes[tag]?.isEmpty() == true) {
-                    tagsToRecipes.remove(tag)
+                    if (tagsToRecipes[tag]?.isEmpty() == true) {
+                        tagsToRecipes.remove(tag)
+                    }
+                }
+
+                //add it back to all tags
+                for (tag in recipe.tags) {
+                    val list = tagsToRecipes.getOrPut(tag) { mutableListOf() }
+                    if (!list.contains(recipe.id)) {
+                        list.add(recipe.id)
+                    }
                 }
             }
+            if(oldRecipe.cookbooks != recipe.cookbooks){
+                cookBooks[toSortName]?.remove(oldRecipe.id)
+                if(cookBooks[toSortName]?.isEmpty()==true) cookBooks.remove(toSortName)
 
-            //add it back to all tags
-            for (tag in recipe.tags) {
-                val list = tagsToRecipes.getOrPut(tag) { mutableListOf() }
-                if (!list.contains(recipe.id)) {
-                    list.add(recipe.id)
+                for(book in oldRecipe.cookbooks){
+                    cookBooks[book]?.remove(oldRecipe.id)
+
+                    /*
+                    if (cookBooks[book]?.isEmpty() == true) {
+                        cookBooks.remove(book)
+                    }
+                     */
+                }
+
+                if(recipe.cookbooks.isEmpty()) cookBooks.getOrPut(toSortName){mutableListOf()}.add(recipe.id)
+                for (book in recipe.cookbooks) {
+                    val list = cookBooks.getOrPut(book) { mutableListOf() }
+                    if (!list.contains(recipe.id)) {
+                        list.add(recipe.id)
+                    }
                 }
             }
         }
