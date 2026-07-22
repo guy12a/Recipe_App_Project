@@ -135,7 +135,7 @@ class RecipeViewModel (
     fun addBook(context: Context, book: String) {
         val current = _recipe.value ?: return
         val updated = current.copy(
-            recipeBooks = current.recipeBooks + book,
+            cookbooks = current.cookbooks + book,
             dateChanged = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
 
@@ -151,7 +151,7 @@ class RecipeViewModel (
     fun removeBook(context: Context, book: String) {
         val current = _recipe.value ?: return
         val updated = current.copy(
-            recipeBooks = current.recipeBooks - book,
+            cookbooks = current.cookbooks - book,
             dateChanged = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
 

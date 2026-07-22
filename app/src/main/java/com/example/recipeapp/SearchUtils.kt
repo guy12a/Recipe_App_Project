@@ -122,8 +122,8 @@ class SearchUtils {
         val recps = loadSavedRecipes(context)
         for (recipe in recps){
             recipes.put(recipe.id,recipe)
-            if(recipe.recipeBooks.isEmpty()) cookBooks.getOrPut(toSortName){mutableListOf()}.add(recipe.id)
-            for(book in recipe.recipeBooks){
+            if(recipe.cookbooks.isEmpty()) cookBooks.getOrPut(toSortName){mutableListOf()}.add(recipe.id)
+            for(book in recipe.cookbooks){
                 cookBooks.getOrPut(book){mutableListOf()}.add(recipe.id)
             }
             for(tag in recipe.tags){
@@ -132,14 +132,16 @@ class SearchUtils {
         }
     }
 
+    fun getCookbooks():List<String>{
+        return cookBooks.keys.toList().sorted()
+    }
+
+    fun getCookbooksWithout(recipe: AppRecipe): List<String>{
+        return getCookbooks().filter { book -> book !in recipe.cookbooks && book!=toSortName}
+    }
+
     //returns all tags sorted alphabetically
     fun getTags(): List<String>{
-        for(tag in tagsToRecipes.keys){
-            if(tag=="testTag"){
-                print("testTag")
-                print(tagsToRecipes[tag])
-            }
-        }
         return tagsToRecipes.keys.toList().sorted()
     }
 
@@ -203,7 +205,7 @@ class SearchUtils {
                 lst,
                 "2023-10-06T14:21:57.559Z",
                 "2023-10-06T14:21:57.559Z",tags, stages=stages,
-                recipeBooks = mutableListOf("Sweets & Desserts"))
+                cookbooks = mutableListOf("Sweets & Desserts"))
         }
     }
 }

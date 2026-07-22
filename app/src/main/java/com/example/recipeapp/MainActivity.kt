@@ -80,6 +80,7 @@ fun MainStructure(searchUtils :SearchUtils){
         val navController = rememberNavController()
         Scaffold(
             modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+            snackbarHost = {},
             topBar = {
                 //current backStack - current screen. There is also previous!
                 val backStackEntry by navController.currentBackStackEntryAsState()

@@ -28,7 +28,7 @@ data class AppRecipe (
     var totalTime: String? = null,
     var recipeYield: String? = null,
 
-    var recipeBooks: List<String> = emptyList(),
+    var cookbooks: List<String> = emptyList(),
 
     var stages: List<RecipeStage> = emptyList(),
 
