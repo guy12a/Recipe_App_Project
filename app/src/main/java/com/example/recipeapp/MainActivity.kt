@@ -15,6 +15,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -23,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +40,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.recipeapp.ui.theme.RecipeAppTheme
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity() {
@@ -76,11 +80,12 @@ fun MainStructure(searchUtils :SearchUtils){
         mutableStateOf<@Composable RowScope.() -> Unit>({})
     }
 
+
+
     RecipeAppTheme {
         val navController = rememberNavController()
         Scaffold(
             modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
-            snackbarHost = {},
             topBar = {
                 //current backStack - current screen. There is also previous!
                 val backStackEntry by navController.currentBackStackEntryAsState()

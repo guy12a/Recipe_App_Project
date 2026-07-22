@@ -25,35 +25,39 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import coil3.compose.AsyncImage
-import com.gowtham.ratingbar.RatingBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import coil3.compose.AsyncImage
+import com.gowtham.ratingbar.RatingBar
+import kotlinx.coroutines.launch
 
 //https://github.com/a914-gowtham/compose-ratingbar
 
@@ -74,14 +78,46 @@ fun RecipePageLayout(searchUtils : SearchUtils,
                      modifier: Modifier = Modifier,
                      navController: NavController,
                      from:String,
-                     setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit)
-{
+                     setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit
+) {
     //creates a viewmodel, that works as a safe
     val viewModel: RecipeViewModel = viewModel(
         factory = RecipeViewModelFactory(searchUtils)
     )
+    //controls the editing of recipe name
+    var openNameSheet by remember { mutableStateOf (false) }
+    val nameSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
+        newValue != SheetValue.Hidden
+    })
+
+    //controls if top bar dropdown is open
+    var openTopDropDown by remember { mutableStateOf (false) }
+
+    //controls editing recipe book
+    var openEditBooksSheet by remember { mutableStateOf (false) }
+    val editBooksSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
+        newValue != SheetValue.Hidden
+    })
     LaunchedEffect(originalRecipe.id) {
         viewModel.setRecipe(originalRecipe)
+        setTopBarActions({
+            IconButton(onClick = { openNameSheet=true }) {
+                Icon(painter = painterResource(R.drawable.baseline_edit_24), contentDescription = "Edit")
+            }
+            Box{
+                IconButton(onClick = { openTopDropDown=true }) {
+                    Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
+                }
+                TopBarDropDown(
+                    openTopDropDown,
+                    {openTopDropDown=false},
+                    {
+                        openEditBooksSheet=true
+                        openTopDropDown=false
+                    })
+            }
+
+        })
     }
     val currentRecipe by viewModel.recipe.collectAsState()
     val recipe = currentRecipe ?: return
@@ -105,21 +141,6 @@ fun RecipePageLayout(searchUtils : SearchUtils,
 
     //remove stage alert
     var removedStage by remember { mutableStateOf<RecipeStage?>(null) }
-
-    //controls the editing of recipe name
-    var openNameSheet by remember { mutableStateOf (false) }
-    val nameSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
-        newValue != SheetValue.Hidden
-    })
-
-    //controls if top bar dropdown is open
-    var openTopDropDown by remember { mutableStateOf (false) }
-
-    //controls editing recipe book
-    var openEditBooksSheet by remember { mutableStateOf (false) }
-    val editBooksSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
-        newValue != SheetValue.Hidden
-    })
 
 
     Column(
@@ -225,27 +246,6 @@ fun RecipePageLayout(searchUtils : SearchUtils,
             }
         }
 
-        LaunchedEffect(recipe.id) {
-            setTopBarActions({
-                IconButton(onClick = { openNameSheet=true }) {
-                    Icon(painter = painterResource(R.drawable.baseline_edit_24), contentDescription = "Edit")
-                }
-                Box{
-                    IconButton(onClick = { openTopDropDown=true }) {
-                        Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
-                    }
-                    TopBarDropDown(
-                        openTopDropDown,
-                        {openTopDropDown=false},
-                        {
-                            openEditBooksSheet=true
-                            openTopDropDown=false
-                    })
-                }
-
-            })
-        }
-
         if(openNameSheet){
             ModalBottomSheet(
                 onDismissRequest = { openNameSheet = false },
@@ -260,7 +260,11 @@ fun RecipePageLayout(searchUtils : SearchUtils,
                 onDismissRequest = { openEditBooksSheet = false },
                 sheetState = editBooksSheetState
             ){
-                EditCookbooksSheet(recipe,searchUtils.getCookbooksWithout(recipe),{ recipeBook->viewModel.addBook(context,recipeBook)},{recipeBook->viewModel.removeBook(context,recipeBook)},{openEditBooksSheet=false})
+                EditCookbooksSheet(recipe,
+                    searchUtils.getCookbooksWithout(recipe),
+                    { recipeBook->viewModel.addBook(context,recipeBook)},
+                    {recipeBook->viewModel.removeBook(context,recipeBook)},
+                    {openEditBooksSheet=false})
             }
         }
     }
@@ -311,8 +315,12 @@ fun EditCookbooksSheet(
     cookbooksWithout: List<String>,
     onBookAdded: (String) -> Unit,
     onBookRemoved: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ){
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
         .fillMaxSize()
@@ -334,7 +342,11 @@ fun EditCookbooksSheet(
             for (book in recipe.cookbooks){
                 Card(shape = RoundedCornerShape(15.dp),modifier = Modifier.clickable(onClick = {
                     if(recipe.cookbooks.size<=1){
-
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                "A recipe must belong to at least one cookbook."
+                            )
+                        }
                     }
                     else{
                         onBookRemoved(book)
@@ -357,6 +369,8 @@ fun EditCookbooksSheet(
                 }
             }
         }
+
+        SnackbarHost(hostState = snackbarHostState)
 
 
     }
@@ -382,8 +396,6 @@ fun TopBarDropDown(
         )
     }
 }
-
-
 
 //========================== Stages ==========================
 
@@ -492,7 +504,7 @@ fun EditStageBottomSheet(
         Text("Edit Title",style = StyleUtils.smallTitle)
         OutlinedTextField(
             state = titleField,
-            placeholder = { Text("Add or search tag") },
+            placeholder = { Text("Insert Stage Title") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -500,7 +512,7 @@ fun EditStageBottomSheet(
         Text("Edit Ingredients",style = StyleUtils.smallTitle)
         OutlinedTextField(
             state = ingredField,
-            placeholder = { Text("Add or search tag") },
+            placeholder = { Text("Insert Stage Ingredients") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -508,7 +520,7 @@ fun EditStageBottomSheet(
         Text("Edit Instructions",style = StyleUtils.smallTitle)
         OutlinedTextField(
             state = instructField,
-            placeholder = { Text("Add or search tag") },
+            placeholder = { Text("Insert Stage Instructions") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -628,7 +640,13 @@ fun BottomTagSheet(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(5.dp))
     {
-        Text("Add & Remove Tags", style = StyleUtils.bigTitle)
+        Row() {
+            Text("Add & Remove Tags", modifier=Modifier.weight(1f),style = StyleUtils.bigTitle)
+
+            Button(onClick = {onDismiss()}) {
+                Text("Cancel")
+            }
+        }
 
         OutlinedTextField(
             state = textFieldState,
@@ -680,7 +698,7 @@ fun RecipePage(searchUtils : SearchUtils,
                modifier: Modifier = Modifier,
                navController: NavController,
                from: String,
-               setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit
+               setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit,
 ){
     var recipe = searchUtils.getRecipe(recipeId)
     RecipePageLayout(searchUtils,recipe,modifier,navController,from,setTopBarActions)
@@ -694,7 +712,9 @@ fun RecipeDetailsPreview() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     //TagAndMenu("Sweets",true,{tag->},{},{})
 
-    EditCookbooksSheet(SearchUtils.exampleRec(),arrayListOf("One","Two"),{ },{},{})
+    EditCookbooksSheet(SearchUtils.exampleRec(),
+        arrayListOf("One","Two"),{ },
+        {},{})
 
     /*
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
