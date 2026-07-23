@@ -29,10 +29,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -51,10 +52,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.example.recipeapp.ui.theme.RecipeAppTheme
 
 /* Add options to:
-    Add new recipe
     Edit cookbook name
 * */
 
@@ -62,7 +64,6 @@ import coil3.compose.AsyncImage
 @Composable
 fun CookbookPageLayout(
     searchUtils : SearchUtils,
-    title : String,
     recipes:List<Pair<String, AppRecipe>>,
     name:String?,
     modifier: Modifier = Modifier,
@@ -70,11 +71,8 @@ fun CookbookPageLayout(
 ){
     val context = LocalContext.current
 
-    //controls the adding of tags using bottom sheet
-    var openAddRecipeSheet by remember { mutableStateOf (false) }
-    val addRecipeSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
-        newValue != SheetValue.Hidden
-    })
+    var openAddRecipeDialog by remember { mutableStateOf (false) }
+    var openAddBookDialog by remember { mutableStateOf (false) }
 
     //val painter = painterResource(R.drawable.placeholder)
     //columns = GridCells.Adaptive(minSize = 128.dp)
@@ -86,50 +84,95 @@ fun CookbookPageLayout(
         horizontalArrangement = Arrangement.spacedBy(10.dp))
     {
         item (span = { GridItemSpan(maxCurrentLineSpan) }){
-            var newTitle = title
-            if(title!=SearchUtils.homeName) newTitle+= " - " + recipes.size + " recipes"
-            Text(newTitle, style = StyleUtils.bigTitle)
+            var title = name
+            if(name!=null) title+= " - " + recipes.size + " recipes"
+            else title = SearchUtils.homeName
+            Text(title, style = StyleUtils.bigTitle)
         }
+        //if home page
         if(name==null){
-
-        }
-        else if(name!= SearchUtils.allRecipesName){
             item{
-                AddRecipeCard({openAddRecipeSheet=true})
+                AddRecipeOrBook(name,{openAddBookDialog=true}, "add new book","Add New Cookbook")
+            }
+            items(recipes) { (cardName, recipe) ->
+                RecipeCard(
+                    recipe.name,
+                    cardName,
+                    {
+                        navController.navigate(
+                            CookbookPageNav(cardName)
+                        )
+                    }
+                )
             }
         }
-        items(recipes) { (cardName, recipe) ->
-            if(name==null)
-                ImageCard(recipe.name,
+        //if any cookbook besides all recipes
+        else if(name!= SearchUtils.allRecipesName){
+            item{
+                AddRecipeOrBook(name,{openAddRecipeDialog=true},"add new recipe","Add New Recipe")
+            }
+            if(recipes.isEmpty()){
+                item(){
+                    AddRecipeOrBook(name,{},"bulk add by tag", "Add Many Recipes by Tag")
+                }
+            }
+            items(recipes) { (cardName, recipe) ->
+                RecipeCard(recipe.name,
                     cardName,
                     {navController.navigate(
-                        CookbookPageNav(cardName)
-                    )}
-                )
-            else
-                ImageCard(recipe.name,
-                    cardName,
-                    {navController.navigate(
-                        RecipePageNav(recipe.id,title)
+                        RecipePageNav(recipe.id,name)
                     )})
+            }
+        }
+        //all recipes book
+        else{
+            items(recipes) { (cardName, recipe) ->
+                RecipeCard(recipe.name,
+                    cardName,
+                    {navController.navigate(
+                        RecipePageNav(recipe.id,name)
+                    )})
+            }
         }
     }
 
-    if(openAddRecipeSheet){
-        CreateRecipeDialog(
+    if(openAddRecipeDialog && name!=null){
+        CreateRecipeOrBookDialog(
+            name,
             { newRecipeName -> navController.navigate(
-                RecipePageNav(searchUtils.createNewRecipe(context,title,newRecipeName),title)) },
-            {openAddRecipeSheet=false})
+                RecipePageNav(searchUtils.createNewRecipe(context,name,newRecipeName),name)) },
+            {openAddRecipeDialog=false})
+    }
+    
+    if(openAddBookDialog){
+        CreateRecipeOrBookDialog(
+            null,
+            {newBookName ->
+                searchUtils.createNewBook(newBookName)
+                navController.navigate(CookbookPageNav(newBookName)) },
+            {openAddBookDialog=false}
+            )
     }
 }
 
 @Composable
-fun CreateRecipeDialog(
+fun CreateRecipeOrBookDialog(
+    bookName: String?,
     onCreate: (String) -> Unit,
     onDismiss: () -> Unit
 ){
     val textFieldState = rememberTextFieldState()
     val textFieldInput = textFieldState.text.toString()
+
+    var text1 = "Create a New Recipe"
+    var text2 = "Enter the new recipe's name"
+    var text3 = "Create Recipe"
+
+    if(bookName == null){
+        text1 = "Create a Cookbook"
+        text2 = "Enter the new cookbook's name"
+        text3 = "Create Cookbook"
+    }
 
     Dialog(onDismissRequest = { onDismiss() }) {
         Card(
@@ -139,18 +182,19 @@ fun CreateRecipeDialog(
                 Modifier.padding(10.dp)
             ) {
                 Row() {
-                    Text("Create a new recipe", modifier=Modifier.weight(1f),style = StyleUtils.smallTitle)
+                    Text(text1, modifier=Modifier.weight(1f),style = StyleUtils.smallTitle)
 
                     Button(onClick = {onDismiss()}) {
                         Text("Cancel")
                     }
                 }
 
+
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
                     state = textFieldState,
                     lineLimits = TextFieldLineLimits.SingleLine,
-                    placeholder = { Text("Enter New Recipe Name") },
+                    placeholder = { Text(text2) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -160,60 +204,17 @@ fun CreateRecipeDialog(
                         onDismiss()
                         onCreate(textFieldInput) },
                     modifier = Modifier.fillMaxWidth()) {
-                    Text("Create Recipe")
+                    Text(text3)
                 }
             }
         }
     }
 }
 
-//Cookbook page gets a SearchUtils and the name of the cookbook
-@Composable
-fun CookbookPage(searchUtils : SearchUtils,
-                 name: String?,
-                 modifier: Modifier = Modifier,
-                 navController: NavController,
-                 setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit){
-
-    var list: List<Pair<String, AppRecipe>>
-    var title = ""
-    if(name == null){
-        title = SearchUtils.homeName
-        list = searchUtils.getCookBooksList()
-        LaunchedEffect(title){
-            setTopBarActions({
-                IconButton(onClick = { /* do something */ }) {
-                    Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
-                }
-            })
-        }
-    }
-    else{
-        title = name
-        list = searchUtils.getBookRecipesSorted(title,{it.dateChanged ?: ""})
-        LaunchedEffect(title) {
-            setTopBarActions({
-                IconButton(onClick = { /* do something */ }) {
-                    Icon(
-                        painter = painterResource(R.drawable.baseline_add_24),
-                        contentDescription = "Add"
-                    )
-                }
-                IconButton(onClick = { /* do something */ }) {
-                    Icon(
-                        painter = painterResource(R.drawable.outline_more_vert_24),
-                        contentDescription = "More"
-                    )
-                }
-            })
-        }
-    }
-    CookbookPageLayout(searchUtils,title,list,name,modifier,navController)
-
-}
+//========================== Recipes and Book Elements ==========================
 
 @Composable
-fun AddRecipeCard(onClick: () -> Unit){
+fun AddRecipeOrBook(bookName : String? ,onClick: () -> Unit, buttonDesc : String, buttonBottomText: String){
     Column(
         modifier = Modifier
             .background(Color.White)
@@ -231,19 +232,19 @@ fun AddRecipeCard(onClick: () -> Unit){
             border = BorderStroke(1.dp, Color.Black),
         ) {
             Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(painter = painterResource(R.drawable.baseline_add_24), contentDescription = "add new recipe")
+                Icon(painter = painterResource(R.drawable.baseline_add_24), contentDescription = buttonDesc)
             }
         }
-        Text("Add New Recipe",Modifier.padding(2.dp),style = StyleUtils.cardText, maxLines = 3, overflow = TextOverflow.Ellipsis)
+        Text(buttonBottomText,Modifier.padding(2.dp),style = StyleUtils.cardText, maxLines = 3, overflow = TextOverflow.Ellipsis)
     }
 }
 
 //Image + Recipe Name for the cookbook page
 //Or image + cookbook name for the all books page
 @Composable
-fun ImageCard (recipeName: String,
-               cardTxt : String,
-               onClick: () -> Unit){
+fun RecipeCard (recipeName: String,
+                cardTxt : String,
+                onClick: () -> Unit){
     Column(
         modifier = Modifier
             .background(Color.White)
@@ -266,6 +267,49 @@ fun ImageCard (recipeName: String,
     }
 }
 
+//========================== General ==========================
+
+//Main entry point to cookbook or homepage
+@Composable
+fun CookbookPage(searchUtils : SearchUtils,
+                 name: String?,
+                 modifier: Modifier = Modifier,
+                 navController: NavController,
+                 setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit){
+
+    var list: List<Pair<String, AppRecipe>>
+    if(name == null){
+        list = searchUtils.getCookBooksList()
+        LaunchedEffect(SearchUtils.homeName){
+            setTopBarActions({
+                IconButton(onClick = { /* do something */ }) {
+                    Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
+                }
+            })
+        }
+    }
+    else{
+        list = searchUtils.getBookRecipesSorted(name,{it.dateChanged ?: ""})
+        LaunchedEffect(name) {
+            setTopBarActions({
+                IconButton(onClick = { /* do something */ }) {
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_add_24),
+                        contentDescription = "Add"
+                    )
+                }
+                IconButton(onClick = { /* do something */ }) {
+                    Icon(
+                        painter = painterResource(R.drawable.outline_more_vert_24),
+                        contentDescription = "More"
+                    )
+                }
+            })
+        }
+    }
+    CookbookPageLayout(searchUtils,list,name,modifier,navController)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, showSystemUi = true)
 //@Preview(device = Devices.PIXEL_TABLET, showSystemUi = true)
@@ -273,9 +317,8 @@ fun ImageCard (recipeName: String,
 fun CookBookPagePreview() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    CreateRecipeDialog({},{})
+    //CreateRecipeDialog({},{})
 
-    /*
     RecipeAppTheme {
         Scaffold(
             modifier = Modifier
@@ -303,15 +346,15 @@ fun CookBookPagePreview() {
             }
         ) { innerPadding ->
             var list = mutableListOf<Pair<String, AppRecipe>>()
-            list.add("Sweets" to SearchUtils.exampleRec())
-            list.add("Sweet" to SearchUtils.exampleRec())
-            list.add("Swes" to SearchUtils.exampleRec())
-            CookbookPageLayout(SearchUtils(),"Sweets & Desserts", list,"Name", Modifier.padding(innerPadding), navController = rememberNavController())
+            //list.add("Sweets" to SearchUtils.exampleRec())
+            //list.add("Sweet" to SearchUtils.exampleRec())
+            //list.add("Swes" to SearchUtils.exampleRec())
+            CookbookPageLayout(SearchUtils(), list,"Hey", Modifier.padding(innerPadding), navController = rememberNavController())
 
             //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }
     }
-    */
+
 }
 
 

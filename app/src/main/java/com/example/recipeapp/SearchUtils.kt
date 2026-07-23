@@ -217,6 +217,10 @@ class SearchUtils {
         return newRecipe.id
     }
 
+    fun createNewBook(newCookBook : String){
+        cookBooks.getOrPut(newCookBook) {mutableListOf()}
+    }
+
     companion object {
         val allRecipesName = "All Recipes"
         val homeName = "Home"
