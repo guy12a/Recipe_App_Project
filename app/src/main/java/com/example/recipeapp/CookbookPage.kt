@@ -1,8 +1,14 @@
 package com.example.recipeapp
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,22 +28,32 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
@@ -48,12 +64,24 @@ import com.example.recipeapp.ui.theme.RecipeAppTheme
     Edit cookbook name
 * */
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CookbookPageLayout(title : String,
-                       recipes:List<Pair<String, AppRecipe>>,
-                       name:String?,
-                       modifier: Modifier = Modifier,
-                       navController: NavController){
+fun CookbookPageLayout(
+    searchUtils : SearchUtils,
+    title : String,
+    recipes:List<Pair<String, AppRecipe>>,
+    name:String?,
+    modifier: Modifier = Modifier,
+    navController: NavController
+){
+    val context = LocalContext.current
+
+    //controls the adding of tags using bottom sheet
+    var openAddRecipeSheet by remember { mutableStateOf (false) }
+    val addRecipeSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
+        newValue != SheetValue.Hidden
+    })
+
     //val painter = painterResource(R.drawable.placeholder)
     //columns = GridCells.Adaptive(minSize = 128.dp)
     LazyVerticalGrid(
@@ -68,24 +96,52 @@ fun CookbookPageLayout(title : String,
             if(title!=SearchUtils.homeName) newTitle+= " - " + recipes.size + " recipes"
             Text(newTitle, style = StyleUtils.bigTitle)
         }
+        item{
+            AddRecipeCard({openAddRecipeSheet=true})
+        }
         items(recipes) { (cardName, recipe) ->
             if(name==null)
                 ImageCard(recipe.name,
                     cardName,
-                    Modifier.padding(0.dp),
                     {navController.navigate(
                         CookbookPageNav(cardName)
-                    )})
+                    )}
+                )
             else
                 ImageCard(recipe.name,
                     cardName,
-                    Modifier.padding(0.dp),
                     {navController.navigate(
                         RecipePageNav(recipe.id,title)
                     )})
         }
     }
 
+    if(openAddRecipeSheet){
+        ModalBottomSheet(
+            onDismissRequest = { openAddRecipeSheet = false },
+            sheetState = addRecipeSheetState
+        ){
+            CreateRecipeDialog(
+                { navController.navigate(
+                    RecipePageNav(searchUtils.createNewRecipe(context,title,""),title)) },
+                {openAddRecipeSheet=false})
+        }
+    }
+}
+
+@Composable
+fun CreateRecipeDialog(
+    onCreate: () -> Unit,
+    onDismis: () -> Unit
+){
+    Dialog(onDismissRequest = { onDismis() }) {
+        Card(
+            modifier = Modifier,
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Text("Hey")
+        }
+    }
 }
 
 //Cookbook page gets a SearchUtils and the name of the cookbook
@@ -129,40 +185,61 @@ fun CookbookPage(searchUtils : SearchUtils,
             })
         }
     }
-    CookbookPageLayout(title,list,name,modifier,navController)
+    CookbookPageLayout(searchUtils,title,list,name,modifier,navController)
 
 }
 
-
+@Composable
+fun AddRecipeCard(onClick: () -> Unit){
+    Column(
+        modifier = Modifier
+            .background(Color.White)
+            .clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(7.dp)
+    ) {
+        Card(
+            Modifier.aspectRatio(1.2f),
+            elevation = CardDefaults.cardElevation(5.dp),
+            shape = RoundedCornerShape(15.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
+            border = BorderStroke(1.dp, Color.Black),
+        ) {
+            Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(painter = painterResource(R.drawable.baseline_add_24), contentDescription = "add new recipe")
+            }
+        }
+        Text("Add New Recipe",Modifier.padding(2.dp),style = StyleUtils.cardText, maxLines = 3, overflow = TextOverflow.Ellipsis)
+    }
+}
 
 //Image + Recipe Name for the cookbook page
 //Or image + cookbook name for the all books page
 @Composable
 fun ImageCard (recipeName: String,
                cardTxt : String,
-               modifier: Modifier = Modifier,
                onClick: () -> Unit){
-    Card(modifier) {
-        Column(Modifier.background(Color.White).
-                clickable{
-                    onClick()
-                },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(7.dp))
-        {
-            //aspect ratio - 1< means more squat, 1>means more thin
-            Card( Modifier.aspectRatio(1.2f),
-                elevation = CardDefaults.cardElevation(5.dp),
-                shape = RoundedCornerShape(15.dp)) {
-                AsyncImage(
-                    model = "file:///android_asset/pictures/$recipeName.jpg",
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(R.drawable.placeholder)
-                )
-            }
-            Text(cardTxt,Modifier.padding(2.dp),style = StyleUtils.cardText, maxLines = 3, overflow = TextOverflow.Ellipsis)
+    Column(
+        modifier = Modifier
+            .background(Color.White)
+            .clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(7.dp)
+    ) {
+        //aspect ratio - 1< means more squat, 1>means more thin
+        Card( Modifier.aspectRatio(1.2f),
+            elevation = CardDefaults.cardElevation(5.dp),
+            shape = RoundedCornerShape(15.dp)) {
+            AsyncImage(
+                model = "file:///android_asset/pictures/$recipeName.jpg",
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.placeholder)
+            )
         }
+        Text(cardTxt,Modifier.padding(2.dp),style = StyleUtils.cardText, maxLines = 3, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -173,9 +250,14 @@ fun ImageCard (recipeName: String,
 fun CookBookPagePreview() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
+    CreateRecipeDialog({},{})
+
+    /*
     RecipeAppTheme {
         Scaffold(
-            modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -201,11 +283,12 @@ fun CookBookPagePreview() {
             list.add("Sweets" to SearchUtils.exampleRec())
             list.add("Sweet" to SearchUtils.exampleRec())
             list.add("Swes" to SearchUtils.exampleRec())
-            CookbookPageLayout("Sweets & Desserts", list,null, Modifier.padding(innerPadding), navController = rememberNavController())
+            CookbookPageLayout(SearchUtils(),"Sweets & Desserts", list,"Name", Modifier.padding(innerPadding), navController = rememberNavController())
 
             //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }
     }
+    */
 }
 
 

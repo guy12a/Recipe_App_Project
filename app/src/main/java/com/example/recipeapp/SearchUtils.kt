@@ -1,6 +1,8 @@
 package com.example.recipeapp
 
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -200,6 +202,19 @@ class SearchUtils {
         recipes[recipe.id]=recipe
 
         saveRecipe(context,recipe)
+    }
+
+    fun createNewRecipe(context: Context, cookBook: String, newName: String) : String {
+        var newRecipe = AppRecipe(newName)
+        recipes.put(newRecipe.id,newRecipe)
+
+        val list = cookBooks.getOrPut(cookBook) { mutableListOf() }
+        if (!list.contains(newRecipe.id)) {
+            list.add(newRecipe.id)
+        }
+
+        saveRecipe(context,newRecipe)
+        return newRecipe.id
     }
 
     companion object {

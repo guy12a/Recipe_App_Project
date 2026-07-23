@@ -2,8 +2,12 @@ package com.example.recipeapp
 
 import kotlinx.serialization.Serializable
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 /*
@@ -12,14 +16,14 @@ It includes the Class itself,
 but also functions to load the recipes the app comes with,
 and also to write new ones to storage.
  */
-
+@RequiresApi(Build.VERSION_CODES.O)
 @Serializable
-data class AppRecipe (
+data class AppRecipe constructor(
     var name: String,
     var image: List<String> = emptyList(),
 
-    var datePublished: String? = null,
-    var dateChanged: String? = null,
+    var datePublished: String? = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+    var dateChanged: String? = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
 
     var tags: List<String> = emptyList(),
 
