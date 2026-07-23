@@ -205,8 +205,8 @@ class SearchUtils {
     }
 
     fun createNewRecipe(context: Context, cookBook: String, newName: String) : String {
-        var newRecipe = AppRecipe(newName)
-        recipes.put(newRecipe.id,newRecipe)
+        var newRecipe = AppRecipe(newName, cookbooks = listOf(cookBook))
+        recipes[newRecipe.id] = newRecipe
 
         val list = cookBooks.getOrPut(cookBook) { mutableListOf() }
         if (!list.contains(newRecipe.id)) {

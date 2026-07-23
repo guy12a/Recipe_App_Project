@@ -319,7 +319,7 @@ fun EditCookbooksSheet(
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Row() {
-            Text("Add & Remove Tags",modifier=Modifier.weight(1f), style = StyleUtils.bigTitle)
+            Text("Add or Remove from Cookbooks",modifier=Modifier.weight(1f), style = StyleUtils.bigTitle)
             Button(onClick = {onDismiss()}) {
                 Text("Exit")
             }
