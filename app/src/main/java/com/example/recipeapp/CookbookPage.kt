@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -18,9 +19,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,11 +31,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,6 +56,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -73,6 +80,12 @@ fun CookbookPageLayout(
 
     var openAddRecipeDialog by remember { mutableStateOf (false) }
     var openAddBookDialog by remember { mutableStateOf (false) }
+
+    //controls the editing of recipe name
+    var openBulkAddSheet by remember { mutableStateOf (false) }
+    val bulkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
+        newValue != SheetValue.Hidden
+    })
 
     //val painter = painterResource(R.drawable.placeholder)
     //columns = GridCells.Adaptive(minSize = 128.dp)
@@ -112,8 +125,12 @@ fun CookbookPageLayout(
                 AddRecipeOrBook(name,{openAddRecipeDialog=true},"add new recipe","Add New Recipe")
             }
             if(recipes.isEmpty()){
-                item(){
-                    AddRecipeOrBook(name,{},"bulk add by tag", "Add Many Recipes by Tag")
+                item{
+                    AddRecipeOrBook(name,
+                        { openBulkAddSheet = true },
+                        "bulk add by tag",
+                        "Add Many Recipes by Tag"
+                    )
                 }
             }
             items(recipes) { (cardName, recipe) ->
@@ -152,6 +169,17 @@ fun CookbookPageLayout(
                 navController.navigate(CookbookPageNav(newBookName)) },
             {openAddBookDialog=false}
             )
+    }
+
+    if(openBulkAddSheet && name!=null){
+        ModalBottomSheet(
+            onDismissRequest = { openBulkAddSheet = false },
+            sheetState = bulkSheetState
+        ){
+            BulkAddTagSheet(searchUtils.getTags(),
+                { openBulkAddSheet=false },
+                { addedTags -> searchUtils.addToBookByTags(name,addedTags,context) })
+        }
     }
 }
 
@@ -205,6 +233,65 @@ fun CreateRecipeOrBookDialog(
                         onCreate(textFieldInput) },
                     modifier = Modifier.fillMaxWidth()) {
                     Text(text3)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BulkAddTagSheet(
+    tags: List<String>,
+    onDismiss: () -> Unit,
+    onSave: (List<String>) -> Unit
+){
+    var addedTags by remember { mutableStateOf<List<String>>(emptyList()) }
+    var remainingTags by remember { mutableStateOf<List<String>>(tags) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(5.dp))
+    {
+        Row() {
+            Text("Add Recipes by Tag", modifier = Modifier.weight(1f), style = StyleUtils.bigTitle)
+            Button(onClick = {
+                onSave(addedTags)
+                onDismiss()
+            }) {
+                Text("Save")
+            }
+            Button(onClick = { onDismiss() }) {
+                Text("Cancel")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+        Text("Tags added to book",modifier = Modifier)
+        FlowRow(modifier= Modifier, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            for (tag in addedTags){
+                Card(shape = RoundedCornerShape(15.dp), modifier = Modifier.clickable(onClick = {
+                    addedTags -= tag
+                    remainingTags += tag
+                })){
+                    Text(tag,Modifier.padding(9.dp,4.dp),fontSize = 18.sp)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(15.dp))
+        Text("All remaining tags",modifier = Modifier)
+        FlowRow(modifier= Modifier, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            for (tag in remainingTags){
+                Card(shape = RoundedCornerShape(15.dp),
+                    modifier = Modifier.clickable(onClick = {
+                        remainingTags -= tag
+                        addedTags += tag
+                    }))
+                {
+                    Text(tag,Modifier.padding(9.dp,4.dp),fontSize = 18.sp)
                 }
             }
         }
@@ -318,7 +405,8 @@ fun CookBookPagePreview() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     //CreateRecipeDialog({},{})
-
+    BulkAddTagSheet(listOf("Chocolate","Chicken"),{},{})
+    /*
     RecipeAppTheme {
         Scaffold(
             modifier = Modifier
@@ -354,6 +442,7 @@ fun CookBookPagePreview() {
             //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }
     }
+     */
 
 }
 

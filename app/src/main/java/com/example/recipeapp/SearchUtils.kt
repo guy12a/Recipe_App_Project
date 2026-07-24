@@ -221,6 +221,24 @@ class SearchUtils {
         cookBooks.getOrPut(newCookBook) {mutableListOf()}
     }
 
+    fun addToBookByTags(cookbook: String, tagsToAdd: List<String>, context: Context){
+        val recipeIds = mutableSetOf<String>()
+        for (tag in tagsToAdd) {
+            tagsToRecipes[tag]?.let { recipeIds.addAll(it) }
+        }
+
+        val updatedBook = cookBooks.getOrPut(cookbook) { mutableListOf() }
+
+        for(recipeId in recipeIds){
+            val recipe = recipes[recipeId]
+            if(recipe != null && !recipe.cookbooks.contains(cookbook)) {
+                recipe.cookbooks += (cookbook)
+                updatedBook.add(recipeId)
+                updateRecipe(context,recipe)
+            }
+        }
+    }
+
     companion object {
         val allRecipesName = "All Recipes"
         val homeName = "Home"
