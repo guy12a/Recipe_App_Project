@@ -91,7 +91,7 @@ fun CookbookPageLayout(
     //columns = GridCells.Adaptive(minSize = 128.dp)
     LazyVerticalGrid(
         GridCells.Adaptive(minSize = 100.dp),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(10.dp),
         verticalArrangement = Arrangement.spacedBy(15.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp))
@@ -160,7 +160,7 @@ fun CookbookPageLayout(
                 RecipePageNav(searchUtils.createNewRecipe(context,name,newRecipeName),name)) },
             {openAddRecipeDialog=false})
     }
-    
+
     if(openAddBookDialog){
         CreateRecipeOrBookDialog(
             null,
@@ -168,7 +168,7 @@ fun CookbookPageLayout(
                 searchUtils.createNewBook(newBookName)
                 navController.navigate(CookbookPageNav(newBookName)) },
             {openAddBookDialog=false}
-            )
+        )
     }
 
     if(openBulkAddSheet && name!=null){
@@ -304,7 +304,6 @@ fun BulkAddTagSheet(
 fun AddRecipeOrBook(bookName : String? ,onClick: () -> Unit, buttonDesc : String, buttonBottomText: String){
     Column(
         modifier = Modifier
-            .background(Color.White)
             .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(7.dp)
@@ -334,7 +333,6 @@ fun RecipeCard (recipeName: String,
                 onClick: () -> Unit){
     Column(
         modifier = Modifier
-            .background(Color.White)
             .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(7.dp)
@@ -406,7 +404,7 @@ fun CookBookPagePreview() {
 
     //CreateRecipeDialog({},{})
     BulkAddTagSheet(listOf("Chocolate","Chicken"),{},{})
-    /*
+
     RecipeAppTheme {
         Scaffold(
             modifier = Modifier
@@ -434,15 +432,15 @@ fun CookBookPagePreview() {
             }
         ) { innerPadding ->
             var list = mutableListOf<Pair<String, AppRecipe>>()
-            //list.add("Sweets" to SearchUtils.exampleRec())
-            //list.add("Sweet" to SearchUtils.exampleRec())
-            //list.add("Swes" to SearchUtils.exampleRec())
+            list.add("Sweets" to SearchUtils.exampleRec())
+            list.add("Sweet" to SearchUtils.exampleRec())
+            list.add("Swes" to SearchUtils.exampleRec())
             CookbookPageLayout(SearchUtils(), list,"Hey", Modifier.padding(innerPadding), navController = rememberNavController())
 
             //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }
     }
-     */
+
 
 }
 

@@ -152,7 +152,8 @@ class SearchUtils {
         return getTags().filter {tag -> tag !in recipe.tags}
     }
 
-    //rewrite a recipe to disk
+    //rewrite and update a recipe in searchutils based off a copy
+    //and rewrite to disk
     fun updateRecipe(context: Context,recipe: AppRecipe){
         var oldRecipe = recipes[recipe.id]
 
@@ -234,7 +235,7 @@ class SearchUtils {
             if(recipe != null && !recipe.cookbooks.contains(cookbook)) {
                 recipe.cookbooks += (cookbook)
                 updatedBook.add(recipeId)
-                updateRecipe(context,recipe)
+                saveRecipe(context,recipe)
             }
         }
     }
@@ -260,7 +261,7 @@ class SearchUtils {
 
             val stages = mutableListOf<RecipeStage>()
             stages.add(RecipeStage("Prep",ingred,instruct))
-            stages.add(RecipeStage("Bake", ingredients = emptyList(),emptyList()))
+            //stages.add(RecipeStage("Bake", ingredients = emptyList(),emptyList()))
 
             return AppRecipe("30 min Choclate Chip Cookies",
                 lst,
