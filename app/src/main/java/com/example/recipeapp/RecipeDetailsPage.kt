@@ -271,7 +271,6 @@ fun RecipePageLayout(searchUtils : SearchUtils,
     }
 }
 
-//========================== Top App Bar ==========================
 
 @Composable
 fun EditNameBottomSheet(

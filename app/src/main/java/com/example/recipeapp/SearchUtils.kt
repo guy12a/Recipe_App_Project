@@ -8,14 +8,31 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class SearchUtils {
+
     //map recipeId -> Recipe
-    var recipes : HashMap<String, AppRecipe> = HashMap()
+    private val _recipes =
+        MutableStateFlow<Map<String, AppRecipe>>(emptyMap())
+    val recipes: StateFlow<Map<String, AppRecipe>> = _recipes.asStateFlow()
+
     //map bookName -> List of recipeIds
-    var cookBooks : HashMap<String, MutableList<String>> = HashMap()
+    private val _cookBooks =
+        MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val cookBooks = _cookBooks.asStateFlow()
+
+    
     //map tag -> list of recipeIds
-    var tagsToRecipes : HashMap<String, MutableList<String>> = HashMap()
+    private val _tags =
+        MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val tags = _tags.asStateFlow()
+
+//    var recipes : HashMap<String, AppRecipe> = HashMap()
+//    var cookBooks : HashMap<String, MutableList<String>> = HashMap()
+//    var tagsToRecipes : HashMap<String, MutableList<String>> = HashMap()
 
     //get recipes filtered based off filters and then sorted based off of lambda
     fun <T : Comparable<T>> getRecipesSortedFiltered(
@@ -134,6 +151,8 @@ class SearchUtils {
         }
     }
 
+    //========================== Getting Books ==========================
+
     fun getCookbooks():List<String>{
         return cookBooks.keys.toList().sorted()
     }
@@ -141,6 +160,8 @@ class SearchUtils {
     fun getCookbooksWithout(recipe: AppRecipe): List<String>{
         return getCookbooks().filter { book -> book !in recipe.cookbooks && book!=toSortName}
     }
+
+    //========================== Getting Tags ==========================
 
     //returns all tags sorted alphabetically
     fun getTags(): List<String>{
@@ -151,6 +172,8 @@ class SearchUtils {
     fun getTagsWithout(recipe: AppRecipe) :List<String>{
         return getTags().filter {tag -> tag !in recipe.tags}
     }
+
+    //========================== Updating SearchUtils ==========================
 
     //rewrite and update a recipe in searchutils based off a copy
     //and rewrite to disk
