@@ -69,7 +69,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecipePageLayout(searchUtils : SearchUtils,
+fun RecipePageLayout(recipeRepository : RecipeRepository,
                      originalRecipe : AppRecipe,
                      modifier: Modifier = Modifier,
                      navController: NavController,
@@ -78,24 +78,26 @@ fun RecipePageLayout(searchUtils : SearchUtils,
 ) {
     //creates a viewmodel, that works as a safe
     val viewModel: RecipeViewModel = viewModel(
-        factory = RecipeViewModelFactory(searchUtils)
+        factory = RecipeViewModelFactory(recipeRepository, originalRecipe.id)
     )
+    val currentRecipe by viewModel.recipe.collectAsState()
+    val recipe = currentRecipe ?: return
+
     //controls the editing of recipe name
     var openNameSheet by remember { mutableStateOf (false) }
-    val nameSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
+    val nameSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true){ newValue ->
         newValue != SheetValue.Hidden
-    })
+    }
 
     //controls if top bar dropdown is open
     var openTopDropDown by remember { mutableStateOf (false) }
 
     //controls editing recipe book
     var openEditBooksSheet by remember { mutableStateOf (false) }
-    val editBooksSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
+    val editBooksSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true) { newValue ->
         newValue != SheetValue.Hidden
-    })
+    }
     LaunchedEffect(originalRecipe.id) {
-        viewModel.setRecipe(originalRecipe)
         setTopBarActions({
             IconButton(onClick = { openNameSheet=true }) {
                 Icon(painter = painterResource(R.drawable.baseline_edit_24), contentDescription = "Edit")
@@ -115,8 +117,6 @@ fun RecipePageLayout(searchUtils : SearchUtils,
 
         })
     }
-    val currentRecipe by viewModel.recipe.collectAsState()
-    val recipe = currentRecipe ?: return
 
     val context = LocalContext.current
 
@@ -223,7 +223,7 @@ fun RecipePageLayout(searchUtils : SearchUtils,
                 onDismissRequest = { openTagSheet = false },
                 sheetState = tagSheetState
             ){
-                BottomTagSheet(recipe,searchUtils.getTagsWithout(recipe),
+                BottomTagSheet(recipe,recipeRepository.getTagsWithout(recipe),
                     {tag->viewModel.addTag(context,tag.lowercase())},
                     {t -> viewModel.removeTag(context,t)},
                     {openTagSheet=false})
@@ -262,7 +262,7 @@ fun RecipePageLayout(searchUtils : SearchUtils,
                 sheetState = editBooksSheetState
             ){
                 EditCookbooksSheet(recipe,
-                    searchUtils.getCookbooksWithout(recipe),
+                    recipeRepository.getCookbooksWithout(recipe),
                     { recipeBook->viewModel.addBook(context,recipeBook)},
                     {recipeBook->viewModel.removeBook(context,recipeBook)},
                     {openEditBooksSheet=false})
@@ -287,7 +287,7 @@ fun EditNameBottomSheet(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(5.dp))
     {
-        Row() {
+        Row {
             Text("Edit Recipe Name", modifier=Modifier.weight(1f),style = StyleUtils.bigTitle)
             Button(onClick = {
                 onNameEdited(nameField.text.toString())
@@ -328,7 +328,7 @@ fun EditCookbooksSheet(
         .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        Row() {
+        Row{
             Text("Add or Remove from Cookbooks",modifier=Modifier.weight(1f), style = StyleUtils.bigTitle)
             Button(onClick = {onDismiss()}) {
                 Text("Exit")
@@ -485,7 +485,7 @@ fun EditStageBottomSheet(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(5.dp))
     {
-        Row() {
+        Row {
             Text("Edit Stage", modifier=Modifier.weight(1f),style = StyleUtils.bigTitle)
             Button(onClick = {onStageEdited(stage.copy(
                 title = titleField.text.toString(),
@@ -641,7 +641,7 @@ fun BottomTagSheet(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(5.dp))
     {
-        Row() {
+        Row{
             Text("Add & Remove Tags", modifier=Modifier.weight(1f),style = StyleUtils.bigTitle)
             Button(onClick = { onDismiss() }) {
                 Text("Save")
@@ -699,15 +699,15 @@ fun BottomTagSheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecipePage(searchUtils : SearchUtils,
+fun RecipePage(recipeRepository : RecipeRepository,
                recipeId: String,
                modifier: Modifier = Modifier,
                navController: NavController,
                from: String,
                setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit,
 ){
-    var recipe = searchUtils.getRecipe(recipeId)
-    RecipePageLayout(searchUtils,recipe,modifier,navController,from,setTopBarActions)
+    var recipe = recipeRepository.getRecipe(recipeId)
+    RecipePageLayout(recipeRepository,recipe,modifier,navController,from,setTopBarActions)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -772,7 +772,7 @@ fun RecipeDetailsPreview() {
                 //BottomTagSheet(SearchUtils.exampleRec(),tags,{tag -> tags.add(tag)},{})
             //}
 
-            RecipePageLayout(SearchUtils(),SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back",{})
+            RecipePageLayout(RecipeRepository(),RecipeRepository.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back",{})
         }
     }
 

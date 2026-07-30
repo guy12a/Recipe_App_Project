@@ -5,19 +5,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -27,7 +23,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +31,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.core.os.LocaleListCompat
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
@@ -45,7 +39,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.recipeapp.ui.theme.RecipeAppTheme
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity() {
@@ -67,8 +60,8 @@ class MainActivity : ComponentActivity() {
 
 
 
-        val searchUtils = SearchUtils()
-        searchUtils.loadRecipes(this)
+        val recipeRepository = RecipeRepository()
+        recipeRepository.loadRecipes(this)
 
         enableEdgeToEdge()
         setContent {
@@ -76,7 +69,7 @@ class MainActivity : ComponentActivity() {
             CompositionLocalProvider(
                 LocalLayoutDirection provides LayoutDirection.Ltr
             ) {
-                MainStructure(searchUtils)
+                MainStructure(recipeRepository)
             }
         }
     }
@@ -86,7 +79,7 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("RestrictedApi")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainStructure(searchUtils :SearchUtils){
+fun MainStructure(recipeRepository :RecipeRepository){
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     var topBarActions by remember {
         mutableStateOf<@Composable RowScope.() -> Unit>({})
@@ -133,7 +126,7 @@ fun MainStructure(searchUtils :SearchUtils){
             ) {
                 composable<MainPageNav>{ backStackEntry -> val args = backStackEntry.toRoute<CookbookPageNav>()
                     CookbookPage(
-                        searchUtils,
+                        recipeRepository,
                         name = null,
                         Modifier.padding(innerPadding),
                         navController = navController,
@@ -143,7 +136,7 @@ fun MainStructure(searchUtils :SearchUtils){
                     )
                 }
                 composable<CookbookPageNav>{ backStackEntry -> val args = backStackEntry.toRoute<CookbookPageNav>()
-                    CookbookPage(searchUtils,
+                    CookbookPage(recipeRepository,
                         name = args.cookbookName,
                         Modifier.padding(innerPadding),
                         navController = navController,
@@ -153,7 +146,7 @@ fun MainStructure(searchUtils :SearchUtils){
                 }
                 composable<RecipePageNav> { backStackEntry -> val args = backStackEntry.toRoute<RecipePageNav>()
                     RecipePage(
-                        searchUtils,
+                        recipeRepository,
                         recipeId = args.recipeId,
                         Modifier.padding(innerPadding),
                         navController = navController,
@@ -253,10 +246,10 @@ fun AppPreview() {
             }
         ) { innerPadding ->
             var list = mutableListOf<Pair<String, AppRecipe>>()
-            list.add("Sweets" to SearchUtils.exampleRec())
-            list.add("Sweet" to SearchUtils.exampleRec())
-            list.add("Swes" to SearchUtils.exampleRec())
-            CookbookPageLayout(SearchUtils(), list,null, Modifier.padding(innerPadding), navController = rememberNavController(),{})
+            list.add("Sweets" to RecipeRepository.exampleRec())
+            list.add("Sweet" to RecipeRepository.exampleRec())
+            list.add("Swes" to RecipeRepository.exampleRec())
+            CookbookPageLayout(RecipeRepository(), list,null, Modifier.padding(innerPadding), navController = rememberNavController(),{})
 
             //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }

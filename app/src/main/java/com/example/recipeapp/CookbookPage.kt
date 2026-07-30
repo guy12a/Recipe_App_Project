@@ -32,15 +32,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -57,10 +55,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
-import com.example.recipeapp.ui.theme.RecipeAppTheme
 
 /* Add options to:
     Edit cookbook name
@@ -69,7 +66,7 @@ import com.example.recipeapp.ui.theme.RecipeAppTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CookbookPageLayout(
-    searchUtils : SearchUtils,
+    recipeRepository : RecipeRepository,
     recipes:List<Pair<String, AppRecipe>>,
     name:String?,
     modifier: Modifier = Modifier,
@@ -88,7 +85,7 @@ fun CookbookPageLayout(
     })
 
     if(name==null){
-        LaunchedEffect(SearchUtils.homeName){
+        LaunchedEffect(RecipeRepository.homeName){
             setTopBarActions({
                 IconButton(onClick = { /* do something */ }) {
                     Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
@@ -121,7 +118,7 @@ fun CookbookPageLayout(
         item (span = { GridItemSpan(maxCurrentLineSpan) }){
             var title = name
             if(name!=null) title+= " - " + recipes.size + " recipes"
-            else title = SearchUtils.homeName
+            else title = RecipeRepository.homeName
             Text(title, style = StyleUtils.bigTitle)
         }
         //if home page
@@ -142,7 +139,7 @@ fun CookbookPageLayout(
             }
         }
         //if any cookbook besides all recipes
-        else if(name!= SearchUtils.allRecipesName){
+        else if(name!= RecipeRepository.allRecipesName){
             item{
                 AddRecipeOrBookCard(name,{openAddRecipeDialog=true},"add new recipe","Add New Recipe")
             }
@@ -179,7 +176,7 @@ fun CookbookPageLayout(
         CreateRecipeOrBookDialog(
             name,
             { newRecipeName -> navController.navigate(
-                RecipePageNav(searchUtils.createNewRecipe(context,name,newRecipeName),name)) },
+                RecipePageNav(recipeRepository.createNewRecipe(context,name,newRecipeName),name)) },
             {openAddRecipeDialog=false})
     }
 
@@ -187,7 +184,7 @@ fun CookbookPageLayout(
         CreateRecipeOrBookDialog(
             null,
             {newBookName ->
-                searchUtils.createNewBook(newBookName)
+                recipeRepository.createNewBook(newBookName)
                 navController.navigate(CookbookPageNav(newBookName)) },
             {openAddBookDialog=false}
         )
@@ -198,9 +195,9 @@ fun CookbookPageLayout(
             onDismissRequest = { openBulkAddSheet = false },
             sheetState = bulkSheetState
         ){
-            BulkAddTagSheet(searchUtils.getTags(),
+            BulkAddTagSheet(recipeRepository.getTags(),
                 { openBulkAddSheet=false },
-                { addedTags -> searchUtils.addToBookByTags(name,addedTags,context) })
+                { addedTags -> recipeRepository.addToBookByTags(name,addedTags,context) })
         }
     }
 }
@@ -390,19 +387,20 @@ fun RecipeCard (recipeName: String,
 
 //Main entry point to cookbook or homepage
 @Composable
-fun CookbookPage(searchUtils : SearchUtils,
+fun CookbookPage(recipeRepository : RecipeRepository,
                  name: String?,
                  modifier: Modifier = Modifier,
                  navController: NavController,
-                 setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit){
+                 setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit)
+{
+    //creates a viewmodel, that works as a safe
+    val viewModel: CookbookViewModel = viewModel(
+        factory = BookViewModelFactory(recipeRepository, name)
+    )
+    val currentBook by viewModel.recipes.collectAsState()
+    val list = currentBook ?: return
 
-    var list: List<Pair<String, AppRecipe>>
-    if(name == null)
-        list = searchUtils.getCookBooksList()
-    else
-        list = searchUtils.getBookRecipesSorted(name,{it.dateChanged ?: ""})
-
-    CookbookPageLayout(searchUtils,list,name,modifier,navController,setTopBarActions)
+    CookbookPageLayout(recipeRepository,list,name,modifier,navController,setTopBarActions)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

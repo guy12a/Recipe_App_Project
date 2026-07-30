@@ -1,8 +1,6 @@
 package com.example.recipeapp
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -12,27 +10,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class SearchUtils {
+class RecipeRepository {
 
     //map recipeId -> Recipe
-    private val _recipes =
-        MutableStateFlow<Map<String, AppRecipe>>(emptyMap())
+    private val _recipes = MutableStateFlow<Map<String, AppRecipe>>(emptyMap())
     val recipes: StateFlow<Map<String, AppRecipe>> = _recipes.asStateFlow()
 
     //map bookName -> List of recipeIds
-    private val _cookBooks =
-        MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    private val _cookBooks = MutableStateFlow<Map<String, List<String>>>(emptyMap())
     val cookBooks = _cookBooks.asStateFlow()
 
-    
     //map tag -> list of recipeIds
-    private val _tags =
-        MutableStateFlow<Map<String, List<String>>>(emptyMap())
-    val tags = _tags.asStateFlow()
+    private val _tagsToRecipes = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val tagsToRecipes = _tagsToRecipes.asStateFlow()
 
-//    var recipes : HashMap<String, AppRecipe> = HashMap()
-//    var cookBooks : HashMap<String, MutableList<String>> = HashMap()
-//    var tagsToRecipes : HashMap<String, MutableList<String>> = HashMap()
 
     //get recipes filtered based off filters and then sorted based off of lambda
     fun <T : Comparable<T>> getRecipesSortedFiltered(
@@ -96,13 +87,13 @@ class SearchUtils {
     fun getBookRecipesAsList(bookName: String) : List<Pair<String, AppRecipe>>{
         val recipesInBook = mutableListOf<Pair<String, AppRecipe>>()
         if(bookName == allRecipesName){
-            for(entry in recipes.entries){
+            for(entry in recipes.value.entries){
                 recipesInBook.add(entry.value.name to entry.value)
             }
         }
-        else if(cookBooks.containsKey(bookName)){
-            for(recId in cookBooks.getValue(bookName)) {
-                val rec = recipes.getValue(recId)
+        else if(cookBooks.value.containsKey(bookName)){
+            for(recId in cookBooks.value.getValue(bookName)) {
+                val rec = recipes.value.getValue(recId)
                 recipesInBook.add(rec.name to rec)
             }
         }
@@ -114,33 +105,43 @@ class SearchUtils {
     fun getCookBooksList() : List<Pair<String, AppRecipe>> {
         val list = mutableListOf<Pair<String, AppRecipe>>()
         var flag = false
-        for(book in cookBooks.keys){
-            if(cookBooks.getValue(book).isEmpty())
+
+        for(book in cookBooks.value.keys){
+            if(cookBooks.value.getValue(book).isEmpty())
                 list.add(book to exampleRec())
             else{
-                list.add(book to recipes.getValue(cookBooks.getValue(book).first()))
+                list.add(book to recipes.value.getValue(cookBooks.value.getValue(book).first()))
                 if(!flag){
                     flag = true
-                    list.add(allRecipesName to recipes.getValue(cookBooks.getValue(book).first()))
+                    list.add(allRecipesName to recipes.value.getValue(cookBooks.value.getValue(book).first()))
                 }
             }
         }
-        if(!flag) list.add (allRecipesName to recipes.entries.toList().first().value)
+        if(!recipes.value.entries.toList().isEmpty() && !flag) list.add (allRecipesName to recipes.value.entries.toList().first().value)
         return list
     }
 
     fun getRecipe(recipeId: String): AppRecipe{
-        val rec = recipes.get(recipeId)
+        val rec = recipes.value[recipeId]
         if(rec == null)
             return exampleRec()
         return rec
     }
 
-    //loads already formatted appRecipe jsons from memory, ID based
+    //loads already formatted appRecipe JSONs from memory, ID based
     fun loadRecipes(context: Context){
         val recps = loadSavedRecipes(context)
+
+        val recipes = _recipes.value.toMutableMap()
+        val cookBooks = _cookBooks.value
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
+        val tagsToRecipes = _tagsToRecipes.value
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
+
         for (recipe in recps){
-            recipes.put(recipe.id,recipe)
+            recipes[recipe.id] = recipe
             if(recipe.cookbooks.isEmpty()) cookBooks.getOrPut(toSortName){mutableListOf()}.add(recipe.id)
             for(book in recipe.cookbooks){
                 cookBooks.getOrPut(book){mutableListOf()}.add(recipe.id)
@@ -149,12 +150,16 @@ class SearchUtils {
                 tagsToRecipes.getOrPut(tag){mutableListOf()}.add(recipe.id)
             }
         }
+
+        _recipes.value = recipes
+        _cookBooks.value = cookBooks
+        _tagsToRecipes.value = tagsToRecipes
     }
 
     //========================== Getting Books ==========================
 
     fun getCookbooks():List<String>{
-        return cookBooks.keys.toList().sorted()
+        return cookBooks.value.keys.toList().sorted()
     }
 
     fun getCookbooksWithout(recipe: AppRecipe): List<String>{
@@ -165,7 +170,7 @@ class SearchUtils {
 
     //returns all tags sorted alphabetically
     fun getTags(): List<String>{
-        return tagsToRecipes.keys.toList().sorted()
+        return tagsToRecipes.value.keys.toList().sorted()
     }
 
     //returns all tags not contained in recipe
@@ -178,8 +183,18 @@ class SearchUtils {
     //rewrite and update a recipe in searchutils based off a copy
     //and rewrite to disk
     fun updateRecipe(context: Context,recipe: AppRecipe){
-        var oldRecipe = recipes[recipe.id]
+        //Get copies of the maps
+        val recipes = _recipes.value.toMutableMap()
+        val cookBooks = _cookBooks.value
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
+        val tagsToRecipes = _tagsToRecipes.value
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
 
+        val oldRecipe = recipes[recipe.id]
+
+        //compare and update it in all the maps
         if (oldRecipe != null) {
             if(oldRecipe.tags != recipe.tags){
                 //remove recipe from all tags
@@ -223,13 +238,23 @@ class SearchUtils {
             }
         }
 
+        //update maps
         recipes[recipe.id]=recipe
+        _recipes.value = recipes
+        _cookBooks.value = cookBooks
+        _tagsToRecipes.value = tagsToRecipes
 
         saveRecipe(context,recipe)
     }
 
     fun createNewRecipe(context: Context, cookBook: String, newName: String) : String {
-        var newRecipe = AppRecipe(newName, cookbooks = listOf(cookBook))
+        val recipes = _recipes.value.toMutableMap()
+        val cookBooks = _cookBooks.value
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
+
+        val newRecipe = AppRecipe(newName, cookbooks = listOf(cookBook))
+
         recipes[newRecipe.id] = newRecipe
 
         val list = cookBooks.getOrPut(cookBook) { mutableListOf() }
@@ -237,15 +262,32 @@ class SearchUtils {
             list.add(newRecipe.id)
         }
 
+        _recipes.value = recipes
+        _cookBooks.value = cookBooks
+
         saveRecipe(context,newRecipe)
         return newRecipe.id
     }
 
     fun createNewBook(newCookBook : String){
+        val cookBooks = _cookBooks.value
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
+
         cookBooks.getOrPut(newCookBook) {mutableListOf()}
+
+        _cookBooks.value = cookBooks
     }
 
     fun addToBookByTags(cookbook: String, tagsToAdd: List<String>, context: Context){
+        val recipes = _recipes.value.toMutableMap()
+        val cookBooks = _cookBooks.value
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
+        val tagsToRecipes = _tagsToRecipes.value
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
+
         val recipeIds = mutableSetOf<String>()
         for (tag in tagsToAdd) {
             tagsToRecipes[tag]?.let { recipeIds.addAll(it) }
@@ -256,11 +298,19 @@ class SearchUtils {
         for(recipeId in recipeIds){
             val recipe = recipes[recipeId]
             if(recipe != null && !recipe.cookbooks.contains(cookbook)) {
-                recipe.cookbooks += (cookbook)
+                val updatedRecipe = recipe.copy(
+                    cookbooks = recipe.cookbooks + cookbook
+                )
+                recipes[recipeId] = updatedRecipe
                 updatedBook.add(recipeId)
                 saveRecipe(context,recipe)
             }
         }
+
+        _recipes.value = recipes
+        _cookBooks.value = cookBooks
+        _tagsToRecipes.value = tagsToRecipes
+
     }
 
     companion object {
