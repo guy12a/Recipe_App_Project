@@ -271,9 +271,10 @@ fun BulkAddTagSheet(
     val query = textFieldState.text.toString()
 
     var addedTags by remember { mutableStateOf<List<String>>(emptyList()) }
-    var remainingTags by remember { mutableStateOf<List<String>>(tags.filter {
-        it.contains(query, ignoreCase = true)
-    }) }
+    val remainingTags = tags.filter { tag ->
+        tag !in addedTags &&
+                tag.contains(query, ignoreCase = true)
+    }
 
     Column(
         modifier = Modifier
@@ -309,7 +310,6 @@ fun BulkAddTagSheet(
             for (tag in addedTags){
                 Card(shape = RoundedCornerShape(15.dp), modifier = Modifier.clickable(onClick = {
                     addedTags -= tag
-                    remainingTags += tag
                 })){
                     Text(tag,Modifier.padding(9.dp,4.dp),fontSize = 18.sp)
                 }
@@ -322,7 +322,6 @@ fun BulkAddTagSheet(
             for (tag in remainingTags){
                 Card(shape = RoundedCornerShape(15.dp),
                     modifier = Modifier.clickable(onClick = {
-                        remainingTags -= tag
                         addedTags += tag
                     }))
                 {
