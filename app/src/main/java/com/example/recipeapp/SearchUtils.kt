@@ -266,7 +266,7 @@ class SearchUtils {
             return AppRecipe("30 min Choclate Chip Cookies",
                 lst,
                 "2023-10-06T14:21:57.559Z",
-                "2023-10-06T14:21:57.559Z",tags, stages=stages,
+                "2023-10-06T14:21:57.559Z",tags, stages=emptyList(),
                 cookbooks = mutableListOf("Sweets & Desserts"))
         }
     }

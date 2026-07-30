@@ -223,7 +223,10 @@ fun RecipePageLayout(searchUtils : SearchUtils,
                 onDismissRequest = { openTagSheet = false },
                 sheetState = tagSheetState
             ){
-                BottomTagSheet(recipe,searchUtils.getTagsWithout(recipe),{tag->viewModel.addTag(context,tag.lowercase())},{openTagSheet=false})
+                BottomTagSheet(recipe,searchUtils.getTagsWithout(recipe),
+                    {tag->viewModel.addTag(context,tag.lowercase())},
+                    {t -> viewModel.removeTag(context,t)},
+                    {openTagSheet=false})
             }
         }
 
@@ -618,6 +621,7 @@ fun BottomTagSheet(
     recipe: AppRecipe,
     tags:List<String>,
     onTagAdded: (String) -> Unit,
+    onTagRemoved: (String) -> Unit,
     onDismiss: () -> Unit
 ){
     val textFieldState = rememberTextFieldState()
@@ -640,10 +644,14 @@ fun BottomTagSheet(
     {
         Row() {
             Text("Add & Remove Tags", modifier=Modifier.weight(1f),style = StyleUtils.bigTitle)
-
+            Button(onClick = { onDismiss() }) {
+                Text("Save")
+            }
+            /*
             Button(onClick = {onDismiss()}) {
                 Text("Cancel")
             }
+             */
         }
 
         OutlinedTextField(
@@ -658,7 +666,9 @@ fun BottomTagSheet(
         Text("Recipe Tags",modifier = Modifier)
         FlowRow(modifier= Modifier, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             for (tag in recipe.tags){
-                Card(shape = RoundedCornerShape(15.dp)){
+                Card(shape = RoundedCornerShape(15.dp),
+                    modifier = Modifier.clickable(onClick = { onTagRemoved(tag) }))
+                {
                     Text(tag,Modifier.padding(9.dp,4.dp),fontSize = 18.sp)
                 }
             }
@@ -669,17 +679,16 @@ fun BottomTagSheet(
         FlowRow(modifier= Modifier, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             for (tag in filteredTags){
                 Card(shape = RoundedCornerShape(15.dp),
-                    modifier = Modifier.clickable(onClick = {
-                        onTagAdded(tag)
-                        onDismiss()}))
+                    modifier = Modifier.clickable(onClick = { onTagAdded(tag) }))
                 {
                     Text(tag,Modifier.padding(9.dp,4.dp),fontSize = 18.sp)
                 }
             }
 
             if(showCreateTag){
-                Card(shape = RoundedCornerShape(15.dp),modifier = Modifier.clickable(onClick = {onTagAdded(query)
-                    onDismiss()})){
+                Card(shape = RoundedCornerShape(15.dp),
+                    modifier = Modifier.clickable(onClick = {onTagAdded(query) }))
+                {
                     Text("Add \"$query\"",Modifier.padding(9.dp,4.dp),fontSize = 18.sp)
                 }
             }

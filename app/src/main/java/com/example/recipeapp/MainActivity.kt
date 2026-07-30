@@ -256,7 +256,7 @@ fun AppPreview() {
             list.add("Sweets" to SearchUtils.exampleRec())
             list.add("Sweet" to SearchUtils.exampleRec())
             list.add("Swes" to SearchUtils.exampleRec())
-            CookbookPageLayout(SearchUtils(), list,null, Modifier.padding(innerPadding), navController = rememberNavController())
+            CookbookPageLayout(SearchUtils(), list,null, Modifier.padding(innerPadding), navController = rememberNavController(),{})
 
             //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }

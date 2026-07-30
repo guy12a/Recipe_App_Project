@@ -56,6 +56,9 @@ class RecipeViewModel (
         val current = _recipe.value ?: return
 
         val newStages = mutableListOf<RecipeStage>()
+        if(current.stages.isEmpty())
+            newStages.add(updatedStage)
+
         for(stage in current.stages){
             if(stage.id == updatedStage.id){
                 newStages.add(updatedStage)

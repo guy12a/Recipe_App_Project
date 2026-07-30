@@ -1,7 +1,6 @@
 package com.example.recipeapp
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -74,7 +73,8 @@ fun CookbookPageLayout(
     recipes:List<Pair<String, AppRecipe>>,
     name:String?,
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit
 ){
     val context = LocalContext.current
 
@@ -86,6 +86,28 @@ fun CookbookPageLayout(
     val bulkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
         newValue != SheetValue.Hidden
     })
+
+    if(name==null){
+        LaunchedEffect(SearchUtils.homeName){
+            setTopBarActions({
+                IconButton(onClick = { /* do something */ }) {
+                    Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
+                }
+            })
+        }
+    }
+    else{
+        LaunchedEffect(name) {
+            setTopBarActions({
+                IconButton(onClick = { openBulkAddSheet=true}) {
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_add_24),
+                        contentDescription = "bulk add by tag"
+                    )
+                }
+            })
+        }
+    }
 
     //val painter = painterResource(R.drawable.placeholder)
     //columns = GridCells.Adaptive(minSize = 128.dp)
@@ -105,7 +127,7 @@ fun CookbookPageLayout(
         //if home page
         if(name==null){
             item{
-                AddRecipeOrBook(name,{openAddBookDialog=true}, "add new book","Add New Cookbook")
+                AddRecipeOrBookCard(name,{openAddBookDialog=true}, "add new book","Add New Cookbook")
             }
             items(recipes) { (cardName, recipe) ->
                 RecipeCard(
@@ -122,11 +144,11 @@ fun CookbookPageLayout(
         //if any cookbook besides all recipes
         else if(name!= SearchUtils.allRecipesName){
             item{
-                AddRecipeOrBook(name,{openAddRecipeDialog=true},"add new recipe","Add New Recipe")
+                AddRecipeOrBookCard(name,{openAddRecipeDialog=true},"add new recipe","Add New Recipe")
             }
             if(recipes.isEmpty()){
                 item{
-                    AddRecipeOrBook(name,
+                    AddRecipeOrBookCard(name,
                         { openBulkAddSheet = true },
                         "bulk add by tag",
                         "Add Many Recipes by Tag"
@@ -245,8 +267,13 @@ fun BulkAddTagSheet(
     onDismiss: () -> Unit,
     onSave: (List<String>) -> Unit
 ){
+    val textFieldState = rememberTextFieldState()
+    val query = textFieldState.text.toString()
+
     var addedTags by remember { mutableStateOf<List<String>>(emptyList()) }
-    var remainingTags by remember { mutableStateOf<List<String>>(tags) }
+    var remainingTags by remember { mutableStateOf<List<String>>(tags.filter {
+        it.contains(query, ignoreCase = true)
+    }) }
 
     Column(
         modifier = Modifier
@@ -267,6 +294,14 @@ fun BulkAddTagSheet(
                 Text("Cancel")
             }
         }
+
+
+        OutlinedTextField(
+            state = textFieldState,
+            lineLimits = TextFieldLineLimits.SingleLine,
+            placeholder = { Text("Search tags to add") },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(10.dp))
         Text("Tags added to book",modifier = Modifier)
@@ -301,7 +336,7 @@ fun BulkAddTagSheet(
 //========================== Recipes and Book Elements ==========================
 
 @Composable
-fun AddRecipeOrBook(bookName : String? ,onClick: () -> Unit, buttonDesc : String, buttonBottomText: String){
+fun AddRecipeOrBookCard(bookName : String?, onClick: () -> Unit, buttonDesc : String, buttonBottomText: String){
     Column(
         modifier = Modifier
             .clickable { onClick() },
@@ -363,36 +398,12 @@ fun CookbookPage(searchUtils : SearchUtils,
                  setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit){
 
     var list: List<Pair<String, AppRecipe>>
-    if(name == null){
+    if(name == null)
         list = searchUtils.getCookBooksList()
-        LaunchedEffect(SearchUtils.homeName){
-            setTopBarActions({
-                IconButton(onClick = { /* do something */ }) {
-                    Icon(painter = painterResource(R.drawable.outline_more_vert_24), contentDescription = "More")
-                }
-            })
-        }
-    }
-    else{
+    else
         list = searchUtils.getBookRecipesSorted(name,{it.dateChanged ?: ""})
-        LaunchedEffect(name) {
-            setTopBarActions({
-                IconButton(onClick = { /* do something */ }) {
-                    Icon(
-                        painter = painterResource(R.drawable.baseline_add_24),
-                        contentDescription = "Add"
-                    )
-                }
-                IconButton(onClick = { /* do something */ }) {
-                    Icon(
-                        painter = painterResource(R.drawable.outline_more_vert_24),
-                        contentDescription = "More"
-                    )
-                }
-            })
-        }
-    }
-    CookbookPageLayout(searchUtils,list,name,modifier,navController)
+
+    CookbookPageLayout(searchUtils,list,name,modifier,navController,setTopBarActions)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -405,6 +416,7 @@ fun CookBookPagePreview() {
     //CreateRecipeDialog({},{})
     BulkAddTagSheet(listOf("Chocolate","Chicken"),{},{})
 
+    /*
     RecipeAppTheme {
         Scaffold(
             modifier = Modifier
@@ -440,7 +452,7 @@ fun CookBookPagePreview() {
             //RecipePageLayout(SearchUtils.exampleRec(),Modifier.padding(innerPadding),navController = rememberNavController(),"Back")
         }
     }
-
+    */
 
 }
 
