@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlin.collections.emptyList
@@ -14,13 +15,15 @@ class CookbookViewModel (
 ) : ViewModel() {
 
     val recipes =
-        repository.recipes
-            .map {
-                if (cookbookName == null)
-                    repository.getCookBooksList()
-                else
-                    repository.getBookRecipesSorted(cookbookName) { it.dateChanged ?: "" }
-            }
+        combine(
+            repository.recipes,
+            repository.cookBooks
+        ) { _, _ ->
+            if (cookbookName == null)
+                repository.getCookBooksList()
+            else
+                repository.getBookRecipesSorted(cookbookName) { it.dateChanged ?: "" }
+        }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5000),

@@ -284,13 +284,10 @@ class RecipeRepository {
         val cookBooks = _cookBooks.value
             .mapValues { it.value.toMutableList() }
             .toMutableMap()
-        val tagsToRecipes = _tagsToRecipes.value
-            .mapValues { it.value.toMutableList() }
-            .toMutableMap()
 
         val recipeIds = mutableSetOf<String>()
         for (tag in tagsToAdd) {
-            tagsToRecipes[tag]?.let { recipeIds.addAll(it) }
+            tagsToRecipes.value[tag]?.let { recipeIds.addAll(it) }
         }
 
         val updatedBook = cookBooks.getOrPut(cookbook) { mutableListOf() }
@@ -303,14 +300,12 @@ class RecipeRepository {
                 )
                 recipes[recipeId] = updatedRecipe
                 updatedBook.add(recipeId)
-                saveRecipe(context,recipe)
+                saveRecipe(context,updatedRecipe)
             }
         }
 
         _recipes.value = recipes
         _cookBooks.value = cookBooks
-        _tagsToRecipes.value = tagsToRecipes
-
     }
 
     companion object {
