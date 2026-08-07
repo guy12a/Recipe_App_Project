@@ -1,5 +1,7 @@
 package com.example.recipeapp
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,6 +78,8 @@ fun RecipePageLayout(recipeRepository : RecipeRepository,
                      from:String,
                      setTopBarActions: (@Composable RowScope.() -> Unit) -> Unit
 ) {
+    val context = LocalContext.current
+
     //creates a viewmodel, that works as a safe
     val viewModel: RecipeViewModel = viewModel(
         factory = RecipeViewModelFactory(recipeRepository, originalRecipe.id)
@@ -97,6 +101,16 @@ fun RecipePageLayout(recipeRepository : RecipeRepository,
     val editBooksSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true) { newValue ->
         newValue != SheetValue.Hidden
     }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            viewModel.addImage(context,it)
+        }
+    }
+
+    //controls the top bar actions
     LaunchedEffect(originalRecipe.id) {
         setTopBarActions({
             IconButton(onClick = { openNameSheet=true }) {
@@ -112,14 +126,15 @@ fun RecipePageLayout(recipeRepository : RecipeRepository,
                     {
                         openEditBooksSheet=true
                         openTopDropDown=false
-                    })
-            }
+                    },
+                    {
 
+                    }
+                )
+            }
         })
     }
-
-    val context = LocalContext.current
-
+    
     //controls the adding of tags using bottom sheet
     var openTagSheet by remember { mutableStateOf (false) }
     val tagSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, { newValue ->
@@ -380,7 +395,8 @@ fun EditCookbooksSheet(
 fun TopBarDropDown(
     isExpanded: Boolean,
     onDismiss: () -> Unit,
-    onEditCookbooks: () -> Unit
+    onEditCookbooks: () -> Unit,
+    onAddImage: () -> Unit
 ){
     DropdownMenu(
         expanded = isExpanded,
@@ -393,6 +409,10 @@ fun TopBarDropDown(
         DropdownMenuItem(
             text = { Text("Add or Remove to Cookbooks") },
             onClick = { onEditCookbooks() }
+        )
+        DropdownMenuItem(
+            text = { Text("Add Image") },
+            onClick = { onAddImage() }
         )
     }
 }

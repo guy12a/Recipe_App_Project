@@ -1,6 +1,7 @@
 package com.example.recipeapp
 
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
@@ -148,6 +149,10 @@ class RecipeViewModel (
 
         // update your existing system
         recipeRepository.updateRecipe(context,updated)
+    }
+
+    fun addImage(context: Context, image: Uri){
+
     }
 
 }
